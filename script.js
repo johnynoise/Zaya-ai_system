@@ -169,9 +169,10 @@ function calcularProduto(produto) {
 
   const despesas    = parseFloat(produto.despesas || 0);
   const custoTotal  = custoInsumos + despesas;
-  const margem      = parseFloat(produto.margem || 0) / 100;
-  const precoSugerido = custoTotal / (1 - margem);   // markup sobre preço de venda
-  const lucro       = precoSugerido - custoTotal;
+  const margem      = Math.max(0, parseFloat(produto.margem || 0));
+  const markup      = margem / 100;
+  const precoSugerido = custoTotal * (1 + markup);   // margem aplicada sobre o custo
+  const lucro       = custoTotal * markup;
 
   return { custoInsumos, despesas, custoTotal, margem: produto.margem, precoSugerido, lucro };
 }
@@ -679,10 +680,12 @@ function renderDetalheCalculo(produtoId) {
 
 /** Atualiza os valores do simulador de margem */
 function atualizarSimulador(prod, custoTotal) {
-  const margem = parseInt(document.getElementById('simMargem').value);
+  const margem = Math.max(0, parseFloat(document.getElementById('simMargem').value) || 0);
+  const custoBase = Math.max(0, parseFloat(custoTotal) || 0);
+  const markup = margem / 100;
   document.getElementById('simMargemVal').textContent = margem + '%';
-  const preco = margem < 100 ? custoTotal / (1 - margem / 100) : custoTotal * (1 + margem / 100);
-  const lucro = preco - custoTotal;
+  const preco = custoBase * (1 + markup);
+  const lucro = custoBase * markup;
   document.getElementById('simPreco').textContent = formatBRL(preco);
   document.getElementById('simLucro').textContent = formatBRL(lucro);
 }
