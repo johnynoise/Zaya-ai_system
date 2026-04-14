@@ -78,6 +78,41 @@ function badgeCategoria(cat) {
   return `<span class="tag tag-${cat}">${map[cat] || cat}</span>`;
 }
 
+/** Interpreta o rendimento de um produto a partir do campo de volume */
+function parsearRendimentoProduto(volume) {
+  const texto = String(volume || '').trim();
+  if (!texto) return { quantidade: 1, unidade: 'un', texto: '' };
+
+  const match = texto.match(/^([0-9]+(?:[.,][0-9]+)?)\s*([a-zA-ZÀ-ÿ]+)?$/);
+  if (!match) return { quantidade: 1, unidade: 'un', texto };
+
+  const quantidade = parseFloat(match[1].replace(',', '.')) || 1;
+  const unidadeBruta = (match[2] || 'un').toLowerCase();
+  const mapaUnidades = {
+    litro: 'l',
+    litros: 'l',
+    l: 'l',
+    ml: 'ml',
+    mililitro: 'ml',
+    mililitros: 'ml',
+    g: 'g',
+    grama: 'g',
+    gramas: 'g',
+    kg: 'kg',
+    quilo: 'kg',
+    quilos: 'kg',
+    unidade: 'un',
+    unidades: 'un',
+    un: 'un',
+  };
+
+  return {
+    quantidade,
+    unidade: mapaUnidades[unidadeBruta] || unidadeBruta || 'un',
+    texto,
+  };
+}
+
 /** Normaliza itens antigos e novos da composição */
 function normalizarItemComposicao(item) {
   if (!item) return null;
@@ -109,7 +144,7 @@ function obterComponenteComposicao(item) {
 function obterUnidadeComponente(item) {
   const componente = obterComponenteComposicao(item);
   if (!componente) return '—';
-  if (item.tipo === 'produto') return componente.volume || 'un';
+  if (item.tipo === 'produto') return parsearRendimentoProduto(componente.volume).unidade || 'un';
   return componente.unidade || 'un';
 }
 
@@ -120,7 +155,9 @@ function obterCustoUnitarioComponente(item, visitados = new Set()) {
   if (item.tipo === 'produto') {
     const calculado = calcularProduto(componente, visitados);
     if (calculado.ciclo) return NaN;
-    return calculado.custoTotal;
+    const rendimento = parsearRendimentoProduto(componente.volume);
+    const base = rendimento.quantidade > 0 ? rendimento.quantidade : 1;
+    return calculado.custoTotal / base;
   }
   return componente.custoUnitario || 0;
 }
