@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AçaíPrice — Sistema de Precificação</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ===== SIDEBAR NAV ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">🫐</span>
+      <div>
+        <div class="logo-title">AçaíPrice</div>
+        <div class="logo-sub">Precificação Inteligente</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-btn active" data-page="dashboard">
+        <span class="nav-icon">◈</span> Dashboard
+      </button>
+      <button class="nav-btn" data-page="insumos">
+        <span class="nav-icon">◉</span> Insumos
+      </button>
+      <button class="nav-btn" data-page="produtos">
+        <span class="nav-icon">◎</span> Produtos
+      </button>
+      <button class="nav-btn" data-page="calculos">
+        <span class="nav-icon">◐</span> Cálculos
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="btn-danger-ghost" id="btnLimparTudo" title="Limpar todos os dados">
+        <span>⊗</span> Limpar dados
+      </button>
+      <button class="btn-ghost" id="btnExportar" title="Imprimir relatório">
+        <span>↗</span> Exportar
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+
+    <!-- ===== MOBILE TOPBAR ===== -->
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <span class="topbar-title">🫐 AçaíPrice</span>
+      <div></div>
+    </header>
+
+    <!-- ===== PAGE: DASHBOARD ===== -->
+    <section class="page active" id="page-dashboard">
+      <div class="page-header">
+        <h1>Dashboard</h1>
+        <p class="page-desc">Visão geral do seu catálogo de produtos</p>
+      </div>
+
+      <div class="stats-grid" id="statsGrid">
+        <!-- preenchido via JS -->
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="card">
+          <div class="card-header">
+            <h3>Produtos Cadastrados</h3>
+            <button class="btn-small" data-page="produtos">Ver todos →</button>
+          </div>
+          <div id="dashProdutos" class="dash-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>Top Insumos por Custo</h3>
+            <button class="btn-small" data-page="insumos">Ver todos →</button>
+          </div>
+          <div id="dashInsumos" class="dash-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PAGE: INSUMOS ===== -->
+    <section class="page" id="page-insumos">
+      <div class="page-header">
+        <h1>Insumos</h1>
+        <p class="page-desc">Gerencie matérias-primas e embalagens</p>
+      </div>
+
+      <!-- Form Card -->
+      <div class="card form-card" id="formInsumoCard">
+        <div class="card-header">
+          <h3 id="formInsumoTitulo">Novo Insumo</h3>
+          <button class="btn-icon" id="btnToggleFormInsumo" title="Minimizar">−</button>
+        </div>
+        <div id="formInsumoBody">
+          <form id="formInsumo" autocomplete="off">
+            <input type="hidden" id="insumoId" />
+            <div class="form-grid">
+              <div class="form-group span-2">
+                <label>Nome do Insumo *</label>
+                <input type="text" id="insumoNome" placeholder="Ex: Açaí grosso" required />
+              </div>
+              <div class="form-group">
+                <label>Categoria</label>
+                <select id="insumoCategoria">
+                  <option value="fruta">Fruta / Polpa</option>
+                  <option value="laticinios">Laticínios</option>
+                  <option value="complemento">Complemento</option>
+                  <option value="embalagem">Embalagem</option>
+                  <option value="outros">Outros</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Unidade de Medida *</label>
+                <select id="insumoUnidade">
+                  <option value="kg">kg</option>
+                  <option value="g">g</option>
+                  <option value="l">l</option>
+                  <option value="ml">ml</option>
+                  <option value="un">unidade</option>
+                  <option value="cx">caixa</option>
+                  <option value="pct">pacote</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Quantidade Comprada *</label>
+                <input type="number" id="insumoQtd" placeholder="Ex: 10" min="0.001" step="any" required />
+              </div>
+              <div class="form-group">
+                <label>Preço Pago (R$) *</label>
+                <input type="number" id="insumoPreco" placeholder="Ex: 45.00" min="0.01" step="0.01" required />
+              </div>
+              <div class="form-group">
+                <label>Custo Unitário (calculado)</label>
+                <input type="text" id="insumoCustoUnitario" readonly class="readonly-field" placeholder="R$ 0,00 / unidade" />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn-secondary" id="btnCancelarInsumo">Cancelar</button>
+              <button type="submit" class="btn-primary" id="btnSalvarInsumo">Salvar Insumo</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Search + List -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Insumos Cadastrados</h3>
+          <div class="search-box">
+            <span>⌕</span>
+            <input type="text" id="buscaInsumo" placeholder="Buscar insumo..." />
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table id="tabelaInsumos">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Categoria</th>
+                <th>Qtd Comprada</th>
+                <th>Preço Pago</th>
+                <th>Custo Unit.</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyInsumos">
+              <tr class="empty-row"><td colspan="6">Nenhum insumo cadastrado.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PAGE: PRODUTOS ===== -->
+    <section class="page" id="page-produtos">
+      <div class="page-header">
+        <h1>Produtos</h1>
+        <p class="page-desc">Cadastre e componha seus produtos finais</p>
+      </div>
+
+      <!-- Form Card -->
+      <div class="card form-card" id="formProdutoCard">
+        <div class="card-header">
+          <h3 id="formProdutoTitulo">Novo Produto</h3>
+          <button class="btn-icon" id="btnToggleFormProduto" title="Minimizar">−</button>
+        </div>
+        <div id="formProdutoBody">
+          <form id="formProduto" autocomplete="off">
+            <input type="hidden" id="produtoId" />
+            <div class="form-grid">
+              <div class="form-group span-2">
+                <label>Nome do Produto *</label>
+                <input type="text" id="produtoNome" placeholder="Ex: Açaí 500ml" required />
+              </div>
+              <div class="form-group">
+                <label>Volume / Tamanho</label>
+                <input type="text" id="produtoVolume" placeholder="Ex: 500ml" />
+              </div>
+              <div class="form-group">
+                <label>Margem de Lucro (%)</label>
+                <input type="number" id="produtoMargem" placeholder="Ex: 80" min="0" step="0.1" value="80" />
+              </div>
+              <div class="form-group">
+                <label>Despesas Extras (R$)</label>
+                <input type="number" id="produtoDespesas" placeholder="Ex: 0.50" min="0" step="0.01" value="0" />
+              </div>
+              <div class="form-group span-2">
+                <label>Descrição (opcional)</label>
+                <input type="text" id="produtoDescricao" placeholder="Ex: Com granola e leite condensado" />
+              </div>
+            </div>
+
+            <!-- Composição de Insumos -->
+            <div class="composicao-section">
+              <h4>Composição — Insumos do Produto</h4>
+              <div class="composicao-add">
+                <select id="selectInsumoComposicao">
+                  <option value="">Selecione um insumo...</option>
+                </select>
+                <input type="number" id="qtdInsumoComposicao" placeholder="Quantidade" min="0.001" step="any" />
+                <span class="unidade-hint" id="unidadeHintComposicao">—</span>
+                <button type="button" class="btn-primary btn-small" id="btnAdicionarInsumo">+ Adicionar</button>
+              </div>
+              <table id="tabelaComposicao">
+                <thead>
+                  <tr>
+                    <th>Insumo</th>
+                    <th>Qtd</th>
+                    <th>Unidade</th>
+                    <th>Custo</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyComposicao">
+                  <tr class="empty-row"><td colspan="5">Nenhum insumo adicionado.</td></tr>
+                </tbody>
+              </table>
+              <div class="composicao-total">
+                Custo total dos insumos: <strong id="custoTotalComposicao">R$ 0,00</strong>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn-secondary" id="btnCancelarProduto">Cancelar</button>
+              <button type="submit" class="btn-primary" id="btnSalvarProduto">Salvar Produto</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Search + List -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Produtos Cadastrados</h3>
+          <div class="search-box">
+            <span>⌕</span>
+            <input type="text" id="buscaProduto" placeholder="Buscar produto..." />
+          </div>
+        </div>
+        <div id="listaProdutos" class="produtos-grid"></div>
+      </div>
+    </section>
+
+    <!-- ===== PAGE: CÁLCULOS ===== -->
+    <section class="page" id="page-calculos">
+      <div class="page-header">
+        <h1>Cálculos & Precificação</h1>
+        <p class="page-desc">Análise detalhada de custos e preços sugeridos</p>
+      </div>
+
+      <div class="calc-selector card">
+        <label>Selecionar produto para análise:</label>
+        <select id="selectProdutoCalculo">
+          <option value="">— Selecione um produto —</option>
+        </select>
+      </div>
+
+      <div id="painelCalculo" class="hidden">
+        <div class="calc-header card">
+          <div class="calc-produto-info">
+            <h2 id="calcNomeProduto">—</h2>
+            <span id="calcVolumeProduto" class="tag">—</span>
+          </div>
+        </div>
+
+        <div class="calc-cards">
+          <div class="calc-card custo">
+            <div class="calc-card-label">Custo de Insumos</div>
+            <div class="calc-card-value" id="calcCustoInsumos">R$ 0,00</div>
+          </div>
+          <div class="calc-card despesa">
+            <div class="calc-card-label">Despesas Extras</div>
+            <div class="calc-card-value" id="calcDespesas">R$ 0,00</div>
+          </div>
+          <div class="calc-card total">
+            <div class="calc-card-label">Custo Total</div>
+            <div class="calc-card-value" id="calcCustoTotal">R$ 0,00</div>
+          </div>
+          <div class="calc-card margem">
+            <div class="calc-card-label">Margem de Lucro</div>
+            <div class="calc-card-value" id="calcMargem">0%</div>
+          </div>
+          <div class="calc-card preco">
+            <div class="calc-card-label">Preço Sugerido</div>
+            <div class="calc-card-value" id="calcPrecoSugerido">R$ 0,00</div>
+          </div>
+          <div class="calc-card lucro">
+            <div class="calc-card-label">Lucro Estimado/Un.</div>
+            <div class="calc-card-value" id="calcLucro">R$ 0,00</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>Composição Detalhada</h3></div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Insumo</th>
+                  <th>Categoria</th>
+                  <th>Qtd Usada</th>
+                  <th>Custo Unit.</th>
+                  <th>Custo Total</th>
+                  <th>% do Custo</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyDetalheCalculo"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card simulador">
+          <div class="card-header"><h3>Simulador de Margem</h3></div>
+          <div class="simulador-body">
+            <label>Ajustar margem de lucro: <strong id="simMargemVal">80%</strong></label>
+            <input type="range" id="simMargem" min="0" max="300" step="1" value="80" />
+            <div class="sim-result">
+              Preço simulado: <span id="simPreco">R$ 0,00</span>
+              &nbsp;|&nbsp; Lucro simulado: <span id="simLucro">R$ 0,00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="semProdutos" class="empty-state">
+        <div class="empty-icon">◎</div>
+        <p>Nenhum produto encontrado. Cadastre produtos primeiro.</p>
+        <button class="btn-primary" data-page="produtos">Cadastrar Produto</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== MODAL CONFIRMAÇÃO ===== -->
+  <div class="modal-overlay hidden" id="modalConfirm">
+    <div class="modal">
+      <div class="modal-icon">⚠</div>
+      <h3 id="modalTitle">Confirmar ação</h3>
+      <p id="modalMessage">Tem certeza?</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="modalCancel">Cancelar</button>
+        <button class="btn-danger" id="modalConfirmBtn">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TOAST ===== -->
+  <div class="toast hidden" id="toast">
+    <span id="toastMsg">Salvo com sucesso!</span>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
