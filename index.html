@@ -32,6 +32,9 @@
       <button class="nav-btn" data-page="calculos">
         <span class="nav-icon">◐</span> Cálculos
       </button>
+      <button class="nav-btn" data-page="vendas">
+        <span class="nav-icon">◑</span> Vendas
+      </button>
     </nav>
 
     <div class="sidebar-footer">
@@ -368,6 +371,106 @@
         <div class="empty-icon">◎</div>
         <p>Nenhum produto encontrado. Cadastre produtos primeiro.</p>
         <button class="btn-primary" data-page="produtos">Cadastrar Produto</button>
+      </div>
+    </section>
+
+    <!-- ===== PAGE: VENDAS ===== -->
+    <section class="page" id="page-vendas">
+      <div class="page-header">
+        <h1>Estimativa de Vendas</h1>
+        <p class="page-desc">Simule faturamento, custo e lucro dos produtos acabados</p>
+      </div>
+
+      <div class="card vendas-card">
+        <div class="card-header">
+          <h3>Simular Venda</h3>
+        </div>
+        <div class="form-grid vendas-grid">
+          <div class="form-group span-2">
+            <label>Produto Acabado</label>
+            <select id="selectProdutoVenda">
+              <option value="">— Selecione um produto —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Quantidade Vendida</label>
+            <input type="number" id="vendaQuantidade" min="1" step="1" value="1" />
+          </div>
+          <div class="form-group">
+            <label>Preço Unitário de Venda (R$)</label>
+            <input type="number" id="vendaPrecoUnitario" min="0" step="0.01" placeholder="Ex: 18.90" />
+          </div>
+          <div class="form-group">
+            <label>Desconto (%)</label>
+            <input type="number" id="vendaDesconto" min="0" max="100" step="0.1" value="0" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" id="btnLimparVenda">Limpar</button>
+          <button type="button" class="btn-primary" id="btnSimularVenda">Simular Venda</button>
+        </div>
+      </div>
+
+      <div id="painelVenda" class="hidden">
+        <div class="stats-grid vendas-stats">
+          <div class="stat-card" style="--accent-color: var(--acai-light)">
+            <div class="stat-label">Faturamento Bruto</div>
+            <div class="stat-value" id="vendaFaturamento">R$ 0,00</div>
+            <div class="stat-sub">receita total estimada</div>
+          </div>
+          <div class="stat-card" style="--accent-color: var(--coral)">
+            <div class="stat-label">Custo Total</div>
+            <div class="stat-value" id="vendaCustoTotal">R$ 0,00</div>
+            <div class="stat-sub">custo dos produtos vendidos</div>
+          </div>
+          <div class="stat-card" style="--accent-color: var(--green)">
+            <div class="stat-label">Lucro Estimado</div>
+            <div class="stat-value" id="vendaLucro">R$ 0,00</div>
+            <div class="stat-sub">resultado projetado</div>
+          </div>
+          <div class="stat-card" style="--accent-color: #80b3ff">
+            <div class="stat-label">Margem Efetiva</div>
+            <div class="stat-value" id="vendaMargem">0%</div>
+            <div class="stat-sub">sobre o faturamento</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Resumo da Simulação</h3>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <tbody>
+                <tr>
+                  <th>Produto</th>
+                  <td id="vendaResumoProduto">—</td>
+                </tr>
+                <tr>
+                  <th>Rendimento</th>
+                  <td id="vendaResumoRendimento">—</td>
+                </tr>
+                <tr>
+                  <th>Quantidade Vendida</th>
+                  <td id="vendaResumoQuantidade">—</td>
+                </tr>
+                <tr>
+                  <th>Preço Unit. Base</th>
+                  <td id="vendaResumoPrecoBase">—</td>
+                </tr>
+                <tr>
+                  <th>Preço Unit. com Desconto</th>
+                  <td id="vendaResumoPrecoFinal">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="semVenda" class="empty-state">
+        <div class="empty-icon">◑</div>
+        <p>Selecione um produto acabado para simular as vendas.</p>
       </div>
     </section>
 

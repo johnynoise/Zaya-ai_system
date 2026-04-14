@@ -279,6 +279,7 @@ function navegarPara(pagina) {
   // Renderizações específicas por página
   if (pagina === 'dashboard') renderDashboard();
   if (pagina === 'calculos')  renderCalculos();
+  if (pagina === 'vendas')    renderVendas();
 }
 
 // ============================================================
@@ -312,7 +313,17 @@ function calcularProduto(produto, visitados = new Set()) {
     if (item.tipo === 'produto') {
       const calculado = calcularProduto(componente, proximosVisitados);
       if (calculado.ciclo) return NaN;
-      return acc + (calculado.custoTotal * item.quantidade);
+      const rendimento = parsearRendimentoProduto(componente.volume);
+      const base = rendimento.quantidade > 0 ? rendimento.quantidade : NaN;
+      if (!Number.isFinite(base)) return NaN;
+
+      const unidadeBase = rendimento.unidade || 'un';
+      const unidadeItem = item.unidade || unidadeBase;
+      const fator = converterQuantidade(1, unidadeBase, unidadeItem);
+      if (!Number.isFinite(fator) || fator <= 0) return NaN;
+
+      const custoUnitarioComponente = (calculado.custoTotal / base) / fator;
+      return acc + (custoUnitarioComponente * item.quantidade);
     }
 
     return acc + ((componente.custoUnitario || 0) * item.quantidade);
@@ -881,6 +892,105 @@ function renderCalculos() {
   }
 }
 
+// ============================================================
+//  ESTIMATIVA DE VENDAS
+// ============================================================
+
+/** Popula o select da página de vendas com produtos válidos */
+function atualizarSelectVendas() {
+  const sel = document.getElementById('selectProdutoVenda');
+  if (!sel) return;
+
+  const val = sel.value;
+  sel.innerHTML = '<option value="">— Selecione um produto —</option>';
+
+  App.produtos
+    .filter(prod => {
+      const c = calcularProduto(prod);
+      return !c.ciclo;
+    })
+    .forEach(prod => {
+      const opt = document.createElement('option');
+      opt.value = prod.id;
+      opt.textContent = `${prod.nome}${prod.volume ? ` (${prod.volume})` : ''}`;
+      sel.appendChild(opt);
+    });
+
+  sel.value = val;
+}
+
+/** Renderiza a página de vendas */
+function renderVendas() {
+  atualizarSelectVendas();
+
+  const semVenda = document.getElementById('semVenda');
+  const painelVenda = document.getElementById('painelVenda');
+  const sel = document.getElementById('selectProdutoVenda');
+
+  if (App.produtos.length === 0) {
+    semVenda.classList.remove('hidden');
+    painelVenda.classList.add('hidden');
+    return;
+  }
+
+  if (sel.value) {
+    semVenda.classList.add('hidden');
+    painelVenda.classList.remove('hidden');
+    atualizarSimulacaoVenda();
+  } else {
+    semVenda.classList.remove('hidden');
+    painelVenda.classList.add('hidden');
+  }
+}
+
+/** Atualiza os indicadores da simulação de vendas */
+function atualizarSimulacaoVenda() {
+  const produtoId = document.getElementById('selectProdutoVenda').value;
+  const produto = App.produtos.find(p => p.id === produtoId);
+
+  if (!produto) {
+    document.getElementById('painelVenda').classList.add('hidden');
+    document.getElementById('semVenda').classList.remove('hidden');
+    return;
+  }
+
+  const calculado = calcularProduto(produto);
+  if (calculado.ciclo) {
+    showToast('Este produto possui composição inválida.', 'error');
+    return;
+  }
+
+  const quantidade = Math.max(1, parseFloat(document.getElementById('vendaQuantidade').value) || 1);
+  const desconto = Math.min(100, Math.max(0, parseFloat(document.getElementById('vendaDesconto').value) || 0));
+  const precoUnitarioInput = document.getElementById('vendaPrecoUnitario');
+  const precoBase = parseFloat(precoUnitarioInput.value) || calculado.precoSugerido;
+  if (!precoUnitarioInput.value) {
+    precoUnitarioInput.value = calculado.precoSugerido ? calculado.precoSugerido.toFixed(2) : '';
+  }
+  const precoFinal = precoBase * (1 - desconto / 100);
+  const faturamento = precoFinal * quantidade;
+  const custoTotal = calculado.custoTotal * quantidade;
+  const lucro = faturamento - custoTotal;
+  const margem = faturamento > 0 ? (lucro / faturamento) * 100 : 0;
+
+  document.getElementById('semVenda').classList.add('hidden');
+  document.getElementById('painelVenda').classList.remove('hidden');
+
+  document.getElementById('vendaFaturamento').textContent = formatBRL(faturamento);
+  document.getElementById('vendaCustoTotal').textContent = formatBRL(custoTotal);
+  document.getElementById('vendaLucro').textContent = formatBRL(lucro);
+  document.getElementById('vendaMargem').textContent = `${margem.toFixed(1)}%`;
+
+  const rendimento = parsearRendimentoProduto(produto.volume);
+  document.getElementById('vendaResumoProduto').textContent = produto.nome;
+  document.getElementById('vendaResumoRendimento').textContent = Number.isFinite(rendimento.quantidade)
+    ? `${rendimento.quantidade} ${rendimento.unidade}`
+    : (produto.volume || '—');
+  document.getElementById('vendaResumoQuantidade').textContent = `${quantidade} unidade(s)`;
+  document.getElementById('vendaResumoPrecoBase').textContent = formatBRL(precoBase);
+  document.getElementById('vendaResumoPrecoFinal').textContent = formatBRL(precoFinal);
+}
+
 /** Renderiza o painel detalhado de cálculo para um produto */
 function renderDetalheCalculo(produtoId) {
   const prod = App.produtos.find(p => p.id === produtoId);
@@ -1114,6 +1224,7 @@ function init() {
   renderProdutos();
   atualizarSelectInsumos();
   atualizarSelectCalculo();
+  renderVendas();
 
   // ---- Evento: Navegação sidebar ----
   document.querySelectorAll('[data-page]').forEach(btn => {
@@ -1219,6 +1330,21 @@ function init() {
     if (!prod) return;
     const c = calcularProduto(prod);
     atualizarSimulador(prod, c.custoTotal);
+  });
+
+  // ---- Evento: Vendas ----
+  document.getElementById('selectProdutoVenda').addEventListener('change', atualizarSimulacaoVenda);
+  document.getElementById('vendaQuantidade').addEventListener('input', atualizarSimulacaoVenda);
+  document.getElementById('vendaPrecoUnitario').addEventListener('input', atualizarSimulacaoVenda);
+  document.getElementById('vendaDesconto').addEventListener('input', atualizarSimulacaoVenda);
+  document.getElementById('btnSimularVenda').addEventListener('click', atualizarSimulacaoVenda);
+  document.getElementById('btnLimparVenda').addEventListener('click', () => {
+    document.getElementById('selectProdutoVenda').value = '';
+    document.getElementById('vendaQuantidade').value = 1;
+    document.getElementById('vendaPrecoUnitario').value = '';
+    document.getElementById('vendaDesconto').value = 0;
+    document.getElementById('painelVenda').classList.add('hidden');
+    document.getElementById('semVenda').classList.remove('hidden');
   });
 
   // ---- Evento: Exportar ----
