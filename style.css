@@ -276,7 +276,7 @@ h1, h2, h3, h4 {
 
 .form-grid { display: grid; gap: 13px 16px; margin-bottom: 18px; }
 #formInsumo .form-grid { grid-template-columns: 2fr 1.2fr 0.9fr 0.9fr 1.1fr; }
-#formProduto .form-grid { grid-template-columns: 2fr 0.9fr 0.9fr 0.9fr; }
+#formProduto .form-grid { grid-template-columns: 2fr 0.8fr 0.65fr 0.9fr 0.9fr; }
 
 .form-group { display: flex; flex-direction: column; gap: 5px; }
 .form-group.span-2 { grid-column: span 2; }
@@ -542,7 +542,7 @@ tbody tr:hover td { background: #fafbfc; }
 
 .composicao-add {
   display: grid;
-  grid-template-columns: 1fr 110px 42px auto;
+  grid-template-columns: 1fr 110px 80px 42px auto;
   gap: 10px;
   align-items: center;
   margin-bottom: 13px;
@@ -860,7 +860,7 @@ input[type="range"]::-webkit-slider-thumb {
   .form-group.span-2,
   .form-group.span-3 { grid-column: span 2; }
   .calc-cards { grid-template-columns: repeat(2, 1fr); }
-  .composicao-add { grid-template-columns: 1fr 90px 36px auto; }
+  .composicao-add { grid-template-columns: 1fr 90px 72px 36px auto; }
   .produtos-grid { grid-template-columns: 1fr; }
 }
 

@@ -81,10 +81,10 @@ function badgeCategoria(cat) {
 /** Interpreta o rendimento de um produto a partir do campo de volume */
 function parsearRendimentoProduto(volume) {
   const texto = String(volume || '').trim();
-  if (!texto) return { quantidade: 1, unidade: 'un', texto: '' };
+  if (!texto) return { quantidade: NaN, unidade: 'un', texto: '' };
 
   const match = texto.match(/^([0-9]+(?:[.,][0-9]+)?)\s*([a-zA-ZÀ-ÿ]+)?$/);
-  if (!match) return { quantidade: 1, unidade: 'un', texto };
+  if (!match) return { quantidade: NaN, unidade: 'un', texto };
 
   const quantidade = parseFloat(match[1].replace(',', '.')) || 1;
   const unidadeBruta = (match[2] || 'un').toLowerCase();
@@ -113,21 +113,56 @@ function parsearRendimentoProduto(volume) {
   };
 }
 
+/** Retorna a família de unidade para permitir conversão segura */
+function familiaUnidade(unidade) {
+  const u = String(unidade || '').toLowerCase();
+  if (['g', 'kg'].includes(u)) return 'massa';
+  if (['ml', 'l'].includes(u)) return 'volume';
+  if (u === 'un') return 'unidade';
+  return 'outra';
+}
+
+/** Converte quantidades entre unidades compatíveis */
+function converterQuantidade(valor, deUnidade, paraUnidade) {
+  const quantidade = parseFloat(valor);
+  if (!Number.isFinite(quantidade)) return NaN;
+
+  const de = String(deUnidade || '').toLowerCase();
+  const para = String(paraUnidade || '').toLowerCase();
+  if (!de || !para) return NaN;
+  if (de === para) return quantidade;
+  if (familiaUnidade(de) !== familiaUnidade(para)) return NaN;
+
+  const paraBase = {
+    g: 1,
+    kg: 1000,
+    ml: 1,
+    l: 1000,
+    un: 1,
+  };
+
+  const baseDe = paraBase[de];
+  const basePara = paraBase[para];
+  if (!baseDe || !basePara) return NaN;
+  return quantidade * (baseDe / basePara);
+}
+
 /** Normaliza itens antigos e novos da composição */
 function normalizarItemComposicao(item) {
   if (!item) return null;
   const quantidade = parseFloat(item.quantidade) || 0;
+  const unidade = String(item.unidade || item.qtdUnidade || '').toLowerCase();
 
   if (item.tipo && item.itemId) {
-    return { tipo: item.tipo, itemId: item.itemId, quantidade };
+    return { tipo: item.tipo, itemId: item.itemId, quantidade, unidade };
   }
 
   if (item.insumoId) {
-    return { tipo: 'insumo', itemId: item.insumoId, quantidade };
+    return { tipo: 'insumo', itemId: item.insumoId, quantidade, unidade };
   }
 
   if (item.produtoId) {
-    return { tipo: 'produto', itemId: item.produtoId, quantidade };
+    return { tipo: 'produto', itemId: item.produtoId, quantidade, unidade };
   }
 
   return null;
@@ -144,7 +179,7 @@ function obterComponenteComposicao(item) {
 function obterUnidadeComponente(item) {
   const componente = obterComponenteComposicao(item);
   if (!componente) return '—';
-  if (item.tipo === 'produto') return parsearRendimentoProduto(componente.volume).unidade || 'un';
+  if (item.tipo === 'produto') return item.unidade || parsearRendimentoProduto(componente.volume).unidade || 'un';
   return componente.unidade || 'un';
 }
 
@@ -156,8 +191,13 @@ function obterCustoUnitarioComponente(item, visitados = new Set()) {
     const calculado = calcularProduto(componente, visitados);
     if (calculado.ciclo) return NaN;
     const rendimento = parsearRendimentoProduto(componente.volume);
-    const base = rendimento.quantidade > 0 ? rendimento.quantidade : 1;
-    return calculado.custoTotal / base;
+    const base = rendimento.quantidade > 0 ? rendimento.quantidade : NaN;
+    if (!Number.isFinite(base)) return NaN;
+    const unidadeBase = rendimento.unidade || 'un';
+    const unidadeItem = item.unidade || unidadeBase;
+    const fator = converterQuantidade(1, unidadeBase, unidadeItem);
+    if (!Number.isFinite(fator) || fator <= 0) return NaN;
+    return (calculado.custoTotal / base) / fator;
   }
   return componente.custoUnitario || 0;
 }
@@ -496,6 +536,7 @@ function atualizarUnidadeHint() {
   const sel   = document.getElementById('selectInsumoComposicao');
   const id    = sel.value;
   const hint  = document.getElementById('unidadeHintComposicao');
+  const unidadeSel = document.getElementById('unidadeInsumoComposicao');
   const option = sel.options[sel.selectedIndex];
   const tipo = option ? option.dataset.tipo : '';
   const item = tipo === 'produto'
@@ -507,7 +548,12 @@ function atualizarUnidadeHint() {
     return;
   }
 
-  hint.textContent = tipo === 'produto' ? (item.volume || 'un') : (item.unidade || 'un');
+  const unidade = tipo === 'produto'
+    ? parsearRendimentoProduto(item.volume).unidade || 'un'
+    : (item.unidade || 'un');
+
+  hint.textContent = unidade;
+  if (unidadeSel) unidadeSel.value = unidade;
 }
 
 /** Popula o select de componentes do formulário de produto */
@@ -698,9 +744,12 @@ function editarProduto(id) {
   const prod = App.produtos.find(p => p.id === id);
   if (!prod) return;
 
+  const rendimento = parsearRendimentoProduto(prod.volume);
+
   document.getElementById('produtoId').value          = prod.id;
   document.getElementById('produtoNome').value        = prod.nome;
-  document.getElementById('produtoVolume').value      = prod.volume || '';
+  document.getElementById('produtoRendimentoQtd').value = Number.isFinite(rendimento.quantidade) ? rendimento.quantidade : '';
+  document.getElementById('produtoRendimentoUnidade').value = rendimento.unidade || 'g';
   document.getElementById('produtoMargem').value      = prod.margem;
   document.getElementById('produtoDespesas').value    = prod.despesas;
   document.getElementById('produtoDescricao').value   = prod.descricao || '';
@@ -735,6 +784,8 @@ async function excluirProduto(id) {
 function resetFormProduto() {
   document.getElementById('formProduto').reset();
   document.getElementById('produtoId').value = '';
+  document.getElementById('produtoRendimentoQtd').value = '';
+  document.getElementById('produtoRendimentoUnidade').value = 'g';
   document.getElementById('produtoMargem').value = 80;
   document.getElementById('produtoDespesas').value = 0;
   document.getElementById('formProdutoTitulo').textContent = 'Novo Produto';
@@ -751,13 +802,19 @@ document.getElementById('formProduto').addEventListener('submit', function (e) {
 
   const id       = document.getElementById('produtoId').value;
   const nome     = document.getElementById('produtoNome').value.trim();
-  const volume   = document.getElementById('produtoVolume').value.trim();
+  const rendimentoQtd = parseFloat(document.getElementById('produtoRendimentoQtd').value);
+  const rendimentoUnidade = document.getElementById('produtoRendimentoUnidade').value;
   const margem   = parseFloat(document.getElementById('produtoMargem').value) || 0;
   const despesas = parseFloat(document.getElementById('produtoDespesas').value) || 0;
   const descricao = document.getElementById('produtoDescricao').value.trim();
 
   if (!nome) {
     showToast('Informe o nome do produto.', 'error');
+    return;
+  }
+
+  if (!Number.isFinite(rendimentoQtd) || rendimentoQtd <= 0) {
+    showToast('Informe o rendimento do produto.', 'error');
     return;
   }
 
@@ -772,11 +829,11 @@ document.getElementById('formProduto').addEventListener('submit', function (e) {
   if (id) {
     const idx = App.produtos.findIndex(p => p.id === id);
     if (idx !== -1) {
-      App.produtos[idx] = { ...App.produtos[idx], nome, volume, margem, despesas, descricao, composicao };
+      App.produtos[idx] = { ...App.produtos[idx], nome, volume: `${rendimentoQtd}${rendimentoUnidade}`, rendimentoQtd, rendimentoUnidade, margem, despesas, descricao, composicao };
     }
     showToast(`"${nome}" atualizado!`);
   } else {
-    App.produtos.push({ id: gerarId(), nome, volume, margem, despesas, descricao, composicao });
+    App.produtos.push({ id: gerarId(), nome, volume: `${rendimentoQtd}${rendimentoUnidade}`, rendimentoQtd, rendimentoUnidade, margem, despesas, descricao, composicao });
     showToast(`"${nome}" cadastrado!`);
   }
 
@@ -1115,7 +1172,9 @@ function init() {
     const option = sel.options[sel.selectedIndex];
     const tipo = option ? option.dataset.tipo : '';
     const qtdEl = document.getElementById('qtdInsumoComposicao');
+    const unidadeEl = document.getElementById('unidadeInsumoComposicao');
     const qtd = parseFloat(qtdEl.value);
+    const unidade = unidadeEl ? unidadeEl.value : '';
 
     if (!insId || !tipo) { showToast('Selecione um componente.', 'error'); return; }
     if (!qtd || qtd <= 0) { showToast('Informe uma quantidade válida.', 'error'); return; }
@@ -1132,13 +1191,14 @@ function init() {
     });
     if (jaExiste !== -1) {
       const itemAtual = normalizarItemComposicao(App.composicaoTemp[jaExiste]);
-      App.composicaoTemp[jaExiste] = { ...itemAtual, quantidade: itemAtual.quantidade + qtd };
+      App.composicaoTemp[jaExiste] = { ...itemAtual, quantidade: itemAtual.quantidade + qtd, unidade: unidade || itemAtual.unidade };
     } else {
-      App.composicaoTemp.push({ tipo, itemId: insId, quantidade: qtd });
+      App.composicaoTemp.push({ tipo, itemId: insId, quantidade: qtd, unidade });
     }
 
     sel.value = '';
     qtdEl.value = '';
+    if (unidadeEl) unidadeEl.value = 'g';
     document.getElementById('unidadeHintComposicao').textContent = '—';
     renderComposicaoTemp();
   });
