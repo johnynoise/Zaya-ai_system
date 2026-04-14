@@ -393,8 +393,16 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Quantidade Vendida</label>
-            <input type="number" id="vendaQuantidade" min="1" step="1" value="1" />
+            <label>Meta Diária</label>
+            <input type="number" id="vendaMetaDiaria" min="0" step="1" value="10" />
+          </div>
+          <div class="form-group">
+            <label>Vendas por Dia</label>
+            <input type="number" id="vendaQuantidade" min="0" step="1" value="10" />
+          </div>
+          <div class="form-group">
+            <label>Dias no Mês</label>
+            <input type="number" id="vendaDiasMes" min="1" max="31" step="1" value="30" />
           </div>
           <div class="form-group">
             <label>Preço Unitário de Venda (R$)</label>
@@ -435,6 +443,29 @@
           </div>
         </div>
 
+        <div class="stats-grid vendas-stats">
+          <div class="stat-card" style="--accent-color: var(--acai-light)">
+            <div class="stat-label">Quantidade no Mês</div>
+            <div class="stat-value" id="vendaQuantidadeMes">0</div>
+            <div class="stat-sub">meta diária × dias do mês</div>
+          </div>
+          <div class="stat-card" style="--accent-color: var(--coral)">
+            <div class="stat-label">Faturamento Mensal</div>
+            <div class="stat-value" id="vendaFaturamentoMes">R$ 0,00</div>
+            <div class="stat-sub">projeção do período</div>
+          </div>
+          <div class="stat-card" style="--accent-color: var(--green)">
+            <div class="stat-label">Lucro Mensal</div>
+            <div class="stat-value" id="vendaLucroMes">R$ 0,00</div>
+            <div class="stat-sub">resultado projetado</div>
+          </div>
+          <div class="stat-card" style="--accent-color: #80b3ff">
+            <div class="stat-label">Meta Atingida</div>
+            <div class="stat-value" id="vendaMetaAtingida">0%</div>
+            <div class="stat-sub">vendas ÷ meta</div>
+          </div>
+        </div>
+
         <div class="card">
           <div class="card-header">
             <h3>Resumo da Simulação</h3>
@@ -451,8 +482,16 @@
                   <td id="vendaResumoRendimento">—</td>
                 </tr>
                 <tr>
+                  <th>Meta Diária</th>
+                  <td id="vendaResumoMetaDiaria">—</td>
+                </tr>
+                <tr>
                   <th>Quantidade Vendida</th>
                   <td id="vendaResumoQuantidade">—</td>
+                </tr>
+                <tr>
+                  <th>Dias no Mês</th>
+                  <td id="vendaResumoDiasMes">—</td>
                 </tr>
                 <tr>
                   <th>Preço Unit. Base</th>

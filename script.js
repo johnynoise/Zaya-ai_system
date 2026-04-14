@@ -936,6 +936,9 @@ function renderVendas() {
   if (sel.value) {
     semVenda.classList.add('hidden');
     painelVenda.classList.remove('hidden');
+    document.getElementById('vendaQuantidade').value = document.getElementById('vendaQuantidade').value || 10;
+    document.getElementById('vendaMetaDiaria').value = document.getElementById('vendaMetaDiaria').value || 10;
+    document.getElementById('vendaDiasMes').value = document.getElementById('vendaDiasMes').value || 30;
     atualizarSimulacaoVenda();
   } else {
     semVenda.classList.remove('hidden');
@@ -960,7 +963,9 @@ function atualizarSimulacaoVenda() {
     return;
   }
 
-  const quantidade = Math.max(1, parseFloat(document.getElementById('vendaQuantidade').value) || 1);
+  const metaDiaria = Math.max(0, parseFloat(document.getElementById('vendaMetaDiaria').value) || 0);
+  const quantidade = Math.max(0, parseFloat(document.getElementById('vendaQuantidade').value) || 0);
+  const diasMes = Math.min(31, Math.max(1, parseFloat(document.getElementById('vendaDiasMes').value) || 30));
   const desconto = Math.min(100, Math.max(0, parseFloat(document.getElementById('vendaDesconto').value) || 0));
   const precoUnitarioInput = document.getElementById('vendaPrecoUnitario');
   const precoBase = parseFloat(precoUnitarioInput.value) || calculado.precoSugerido;
@@ -968,25 +973,38 @@ function atualizarSimulacaoVenda() {
     precoUnitarioInput.value = calculado.precoSugerido ? calculado.precoSugerido.toFixed(2) : '';
   }
   const precoFinal = precoBase * (1 - desconto / 100);
-  const faturamento = precoFinal * quantidade;
-  const custoTotal = calculado.custoTotal * quantidade;
-  const lucro = faturamento - custoTotal;
-  const margem = faturamento > 0 ? (lucro / faturamento) * 100 : 0;
+  const faturamentoDia = precoFinal * quantidade;
+  const custoDia = calculado.custoTotal * quantidade;
+  const lucroDia = faturamentoDia - custoDia;
+  const faturamentoMes = faturamentoDia * diasMes;
+  const custoMes = custoDia * diasMes;
+  const lucroMes = lucroDia * diasMes;
+  const quantidadeMes = quantidade * diasMes;
+  const metaMes = metaDiaria * diasMes;
+  const metaAtingida = metaMes > 0 ? (quantidadeMes / metaMes) * 100 : 0;
+  const margem = faturamentoDia > 0 ? (lucroDia / faturamentoDia) * 100 : 0;
 
   document.getElementById('semVenda').classList.add('hidden');
   document.getElementById('painelVenda').classList.remove('hidden');
 
-  document.getElementById('vendaFaturamento').textContent = formatBRL(faturamento);
-  document.getElementById('vendaCustoTotal').textContent = formatBRL(custoTotal);
-  document.getElementById('vendaLucro').textContent = formatBRL(lucro);
+  document.getElementById('vendaFaturamento').textContent = formatBRL(faturamentoDia);
+  document.getElementById('vendaCustoTotal').textContent = formatBRL(custoDia);
+  document.getElementById('vendaLucro').textContent = formatBRL(lucroDia);
   document.getElementById('vendaMargem').textContent = `${margem.toFixed(1)}%`;
+
+  document.getElementById('vendaQuantidadeMes').textContent = formatNum(quantidadeMes, 0);
+  document.getElementById('vendaFaturamentoMes').textContent = formatBRL(faturamentoMes);
+  document.getElementById('vendaLucroMes').textContent = formatBRL(lucroMes);
+  document.getElementById('vendaMetaAtingida').textContent = `${metaAtingida.toFixed(1)}%`;
 
   const rendimento = parsearRendimentoProduto(produto.volume);
   document.getElementById('vendaResumoProduto').textContent = produto.nome;
   document.getElementById('vendaResumoRendimento').textContent = Number.isFinite(rendimento.quantidade)
     ? `${rendimento.quantidade} ${rendimento.unidade}`
     : (produto.volume || '—');
+  document.getElementById('vendaResumoMetaDiaria').textContent = `${metaDiaria} unidade(s)`;
   document.getElementById('vendaResumoQuantidade').textContent = `${quantidade} unidade(s)`;
+  document.getElementById('vendaResumoDiasMes').textContent = `${diasMes} dias`;
   document.getElementById('vendaResumoPrecoBase').textContent = formatBRL(precoBase);
   document.getElementById('vendaResumoPrecoFinal').textContent = formatBRL(precoFinal);
 }
@@ -1340,11 +1358,19 @@ function init() {
   document.getElementById('btnSimularVenda').addEventListener('click', atualizarSimulacaoVenda);
   document.getElementById('btnLimparVenda').addEventListener('click', () => {
     document.getElementById('selectProdutoVenda').value = '';
+    document.getElementById('vendaMetaDiaria').value = 10;
     document.getElementById('vendaQuantidade').value = 1;
+    document.getElementById('vendaDiasMes').value = 30;
     document.getElementById('vendaPrecoUnitario').value = '';
     document.getElementById('vendaDesconto').value = 0;
     document.getElementById('painelVenda').classList.add('hidden');
     document.getElementById('semVenda').classList.remove('hidden');
+  });
+
+  ['vendaMetaDiaria', 'vendaQuantidade', 'vendaDiasMes', 'vendaPrecoUnitario', 'vendaDesconto'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      if (document.getElementById('selectProdutoVenda').value) atualizarSimulacaoVenda();
+    });
   });
 
   // ---- Evento: Exportar ----
