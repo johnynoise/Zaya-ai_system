@@ -78,6 +78,59 @@ function badgeCategoria(cat) {
   return `<span class="tag tag-${cat}">${map[cat] || cat}</span>`;
 }
 
+/** Normaliza itens antigos e novos da composição */
+function normalizarItemComposicao(item) {
+  if (!item) return null;
+  const quantidade = parseFloat(item.quantidade) || 0;
+
+  if (item.tipo && item.itemId) {
+    return { tipo: item.tipo, itemId: item.itemId, quantidade };
+  }
+
+  if (item.insumoId) {
+    return { tipo: 'insumo', itemId: item.insumoId, quantidade };
+  }
+
+  if (item.produtoId) {
+    return { tipo: 'produto', itemId: item.produtoId, quantidade };
+  }
+
+  return null;
+}
+
+/** Retorna o componente da composição pelo tipo */
+function obterComponenteComposicao(item) {
+  if (!item) return null;
+  if (item.tipo === 'produto') return App.produtos.find(p => p.id === item.itemId) || null;
+  return App.insumos.find(i => i.id === item.itemId) || null;
+}
+
+/** Retorna a unidade exibida para o item da composição */
+function obterUnidadeComponente(item) {
+  const componente = obterComponenteComposicao(item);
+  if (!componente) return '—';
+  if (item.tipo === 'produto') return componente.volume || 'un';
+  return componente.unidade || 'un';
+}
+
+/** Retorna o custo unitário do item da composição */
+function obterCustoUnitarioComponente(item, visitados = new Set()) {
+  const componente = obterComponenteComposicao(item);
+  if (!componente) return 0;
+  if (item.tipo === 'produto') {
+    const calculado = calcularProduto(componente, visitados);
+    if (calculado.ciclo) return NaN;
+    return calculado.custoTotal;
+  }
+  return componente.custoUnitario || 0;
+}
+
+/** Monta rótulo amigável para o item da composição */
+function obterRotuloComponente(item) {
+  if (item.tipo === 'produto') return 'Produto acabado';
+  return 'Insumo';
+}
+
 // ============================================================
 //  TOAST (notificações)
 // ============================================================
@@ -160,12 +213,37 @@ function navegarPara(pagina) {
  * Centralize aqui toda a lógica de cálculo para
  * facilitar futura migração para backend.
  */
-function calcularProduto(produto) {
-  const custoInsumos = (produto.composicao || []).reduce((acc, item) => {
-    const ins = App.insumos.find(i => i.id === item.insumoId);
-    if (!ins) return acc;
-    return acc + (ins.custoUnitario * item.quantidade);
+function calcularProduto(produto, visitados = new Set()) {
+  if (!produto) {
+    return { custoInsumos: 0, despesas: 0, custoTotal: 0, margem: 0, precoSugerido: 0, lucro: 0, ciclo: false };
+  }
+
+  if (visitados.has(produto.id)) {
+    return { custoInsumos: 0, despesas: 0, custoTotal: 0, margem: 0, precoSugerido: 0, lucro: 0, ciclo: true };
+  }
+
+  const proximosVisitados = new Set(visitados);
+  proximosVisitados.add(produto.id);
+
+  const custoInsumos = (produto.composicao || []).reduce((acc, itemOriginal) => {
+    const item = normalizarItemComposicao(itemOriginal);
+    if (!item || item.quantidade <= 0) return acc;
+
+    const componente = obterComponenteComposicao(item);
+    if (!componente) return acc;
+
+    if (item.tipo === 'produto') {
+      const calculado = calcularProduto(componente, proximosVisitados);
+      if (calculado.ciclo) return NaN;
+      return acc + (calculado.custoTotal * item.quantidade);
+    }
+
+    return acc + ((componente.custoUnitario || 0) * item.quantidade);
   }, 0);
+
+  if (Number.isNaN(custoInsumos)) {
+    return { custoInsumos: 0, despesas: 0, custoTotal: 0, margem: 0, precoSugerido: 0, lucro: 0, ciclo: true };
+  }
 
   const despesas    = parseFloat(produto.despesas || 0);
   const custoTotal  = custoInsumos + despesas;
@@ -174,7 +252,7 @@ function calcularProduto(produto) {
   const precoSugerido = custoTotal * (1 + markup);   // margem aplicada sobre o custo
   const lucro       = custoTotal * markup;
 
-  return { custoInsumos, despesas, custoTotal, margem: produto.margem, precoSugerido, lucro };
+  return { custoInsumos, despesas, custoTotal, margem: produto.margem, precoSugerido, lucro, ciclo: false };
 }
 
 // ============================================================
@@ -381,21 +459,55 @@ function atualizarUnidadeHint() {
   const sel   = document.getElementById('selectInsumoComposicao');
   const id    = sel.value;
   const hint  = document.getElementById('unidadeHintComposicao');
-  const ins   = App.insumos.find(i => i.id === id);
-  hint.textContent = ins ? ins.unidade : '—';
+  const option = sel.options[sel.selectedIndex];
+  const tipo = option ? option.dataset.tipo : '';
+  const item = tipo === 'produto'
+    ? App.produtos.find(p => p.id === id)
+    : App.insumos.find(i => i.id === id);
+
+  if (!item) {
+    hint.textContent = '—';
+    return;
+  }
+
+  hint.textContent = tipo === 'produto' ? (item.volume || 'un') : (item.unidade || 'un');
 }
 
-/** Popula o select de insumos do formulário de produto */
+/** Popula o select de componentes do formulário de produto */
 function atualizarSelectInsumos() {
   const sel = document.getElementById('selectInsumoComposicao');
   const val = sel.value;
-  sel.innerHTML = '<option value="">Selecione um insumo...</option>';
-  App.insumos.forEach(ins => {
-    const opt = document.createElement('option');
-    opt.value = ins.id;
-    opt.textContent = `${ins.nome} (${ins.unidade})`;
-    sel.appendChild(opt);
-  });
+  const produtoEditandoId = document.getElementById('produtoId').value;
+
+  sel.innerHTML = '<option value="">Selecione um componente...</option>';
+
+  if (App.insumos.length > 0) {
+    const grupoInsumos = document.createElement('optgroup');
+    grupoInsumos.label = 'Insumos';
+    App.insumos.forEach(ins => {
+      const opt = document.createElement('option');
+      opt.value = ins.id;
+      opt.dataset.tipo = 'insumo';
+      opt.textContent = `${ins.nome} (${ins.unidade})`;
+      grupoInsumos.appendChild(opt);
+    });
+    sel.appendChild(grupoInsumos);
+  }
+
+  const produtosDisponiveis = App.produtos.filter(prod => prod.id !== produtoEditandoId);
+  if (produtosDisponiveis.length > 0) {
+    const grupoProdutos = document.createElement('optgroup');
+    grupoProdutos.label = 'Produtos acabados';
+    produtosDisponiveis.forEach(prod => {
+      const opt = document.createElement('option');
+      opt.value = prod.id;
+      opt.dataset.tipo = 'produto';
+      opt.textContent = `${prod.nome}${prod.volume ? ` (${prod.volume})` : ''}`;
+      grupoProdutos.appendChild(opt);
+    });
+    sel.appendChild(grupoProdutos);
+  }
+
   sel.value = val;
 }
 
@@ -404,22 +516,36 @@ function renderComposicaoTemp() {
   const tbody = document.getElementById('tbodyComposicao');
 
   if (App.composicaoTemp.length === 0) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="5">Nenhum insumo adicionado.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="5">Nenhum componente adicionado.</td></tr>`;
     document.getElementById('custoTotalComposicao').textContent = formatBRL(0);
     return;
   }
 
   let total = 0;
-  tbody.innerHTML = App.composicaoTemp.map((item, idx) => {
-    const ins = App.insumos.find(i => i.id === item.insumoId);
-    if (!ins) return '';
-    const custo = ins.custoUnitario * item.quantidade;
+  tbody.innerHTML = App.composicaoTemp.map((itemOriginal, idx) => {
+    const item = normalizarItemComposicao(itemOriginal);
+    if (!item) return '';
+
+    const componente = obterComponenteComposicao(item);
+    if (!componente) return '';
+
+    const custoUnitario = obterCustoUnitarioComponente(item);
+    if (Number.isNaN(custoUnitario)) {
+      return `
+        <tr>
+          <td colspan="4" style="color:var(--coral)">Ciclo de produto detectado em "${componente.nome}"</td>
+          <td><button class="btn-delete" onclick="removerItemComposicao(${idx})">✕</button></td>
+        </tr>
+      `;
+    }
+
+    const custo = custoUnitario * item.quantidade;
     total += custo;
     return `
       <tr>
-        <td>${ins.nome}</td>
+        <td><span class="tag ${item.tipo === 'produto' ? 'tag-produto' : 'tag-fruta'}">${obterRotuloComponente(item)}</span> ${componente.nome}</td>
         <td>${formatNum(item.quantidade, 3)}</td>
-        <td>${ins.unidade}</td>
+        <td>${obterUnidadeComponente(item)}</td>
         <td style="color:var(--coral-light)">${formatBRL(custo)}</td>
         <td><button class="btn-delete" onclick="removerItemComposicao(${idx})">✕</button></td>
       </tr>
@@ -433,6 +559,33 @@ function renderComposicaoTemp() {
 function removerItemComposicao(idx) {
   App.composicaoTemp.splice(idx, 1);
   renderComposicaoTemp();
+}
+
+/** Verifica se a composição cria referência circular entre produtos */
+function produtoTemCiclo(produtoId, composicao, produtoRascunho, visitados = new Set()) {
+  if (visitados.has(produtoId)) return true;
+
+  const produto = produtoRascunho && produtoRascunho.id === produtoId
+    ? produtoRascunho
+    : App.produtos.find(p => p.id === produtoId);
+
+  if (!produto) return false;
+
+  const proximosVisitados = new Set(visitados);
+  proximosVisitados.add(produtoId);
+
+  const itens = produtoRascunho && produtoRascunho.id === produtoId
+    ? composicao
+    : (produto.composicao || []);
+
+  for (const itemOriginal of itens) {
+    const item = normalizarItemComposicao(itemOriginal);
+    if (!item || item.tipo !== 'produto') continue;
+    if (item.itemId === produtoId) return true;
+    if (produtoTemCiclo(item.itemId, composicao, produtoRascunho, proximosVisitados)) return true;
+  }
+
+  return false;
 }
 
 // ============================================================
@@ -457,6 +610,9 @@ function renderProdutos(filtro = '') {
 
   container.innerHTML = lista.map(prod => {
     const c = calcularProduto(prod);
+    const custoTotal = c.ciclo ? 'Composição inválida' : formatBRL(c.custoTotal);
+    const precoSugerido = c.ciclo ? '—' : formatBRL(c.precoSugerido);
+    const lucro = c.ciclo ? '—' : formatBRL(c.lucro);
     return `
       <div class="produto-card">
         <div class="produto-card-header">
@@ -467,21 +623,22 @@ function renderProdutos(filtro = '') {
         <div class="produto-stats">
           <div class="produto-stat">
             <div class="produto-stat-label">Custo Total</div>
-            <div class="produto-stat-val val-custo">${formatBRL(c.custoTotal)}</div>
+            <div class="produto-stat-val val-custo">${custoTotal}</div>
           </div>
           <div class="produto-stat">
             <div class="produto-stat-label">Preço Sugerido</div>
-            <div class="produto-stat-val val-preco">${formatBRL(c.precoSugerido)}</div>
+            <div class="produto-stat-val val-preco">${precoSugerido}</div>
           </div>
           <div class="produto-stat">
             <div class="produto-stat-label">Lucro/Un.</div>
-            <div class="produto-stat-val val-lucro">${formatBRL(c.lucro)}</div>
+            <div class="produto-stat-val val-lucro">${lucro}</div>
           </div>
           <div class="produto-stat">
             <div class="produto-stat-label">Margem</div>
             <div class="produto-stat-val val-margem">${prod.margem}%</div>
           </div>
         </div>
+        ${c.ciclo ? '<div class="empty-row" style="padding:0 0 10px;color:var(--coral);text-align:left">Composição circular detectada.</div>' : ''}
         <div class="produto-actions">
           <button class="btn-edit" onclick="editarProduto('${prod.id}')">✎ Editar</button>
           <button class="btn-small" onclick="verCalculo('${prod.id}')">📊 Análise</button>
@@ -515,6 +672,7 @@ function editarProduto(id) {
   // Carrega composição na temp
   App.composicaoTemp = (prod.composicao || []).map(item => ({ ...item }));
   renderComposicaoTemp();
+  atualizarSelectInsumos();
 
   document.getElementById('formProdutoBody').style.display = 'block';
   document.getElementById('btnToggleFormProduto').textContent = '−';
@@ -567,6 +725,12 @@ document.getElementById('formProduto').addEventListener('submit', function (e) {
   }
 
   const composicao = App.composicaoTemp.map(item => ({ ...item }));
+  const produtoRascunho = { id: id || gerarId(), composicao };
+
+  if (produtoTemCiclo(produtoRascunho.id, composicao, produtoRascunho)) {
+    showToast('A composição cria um ciclo entre produtos. Ajuste os componentes.', 'error');
+    return;
+  }
 
   if (id) {
     const idx = App.produtos.findIndex(p => p.id === id);
@@ -635,29 +799,39 @@ function renderDetalheCalculo(produtoId) {
   document.getElementById('calcVolumeProduto').textContent = prod.volume || '—';
   document.getElementById('calcVolumeProduto').className   = 'tag tag-embalagem';
 
-  document.getElementById('calcCustoInsumos').textContent  = formatBRL(c.custoInsumos);
-  document.getElementById('calcDespesas').textContent      = formatBRL(c.despesas);
-  document.getElementById('calcCustoTotal').textContent    = formatBRL(c.custoTotal);
+  document.getElementById('calcCustoInsumos').textContent  = c.ciclo ? 'Composição inválida' : formatBRL(c.custoInsumos);
+  document.getElementById('calcDespesas').textContent      = c.ciclo ? '—' : formatBRL(c.despesas);
+  document.getElementById('calcCustoTotal').textContent    = c.ciclo ? '—' : formatBRL(c.custoTotal);
   document.getElementById('calcMargem').textContent        = prod.margem + '%';
-  document.getElementById('calcPrecoSugerido').textContent = formatBRL(c.precoSugerido);
-  document.getElementById('calcLucro').textContent         = formatBRL(c.lucro);
+  document.getElementById('calcPrecoSugerido').textContent = c.ciclo ? '—' : formatBRL(c.precoSugerido);
+  document.getElementById('calcLucro').textContent         = c.ciclo ? '—' : formatBRL(c.lucro);
 
   // Tabela detalhada por insumo
   const tbody = document.getElementById('tbodyDetalheCalculo');
   if (!prod.composicao || prod.composicao.length === 0) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">Nenhum insumo na composição.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">Nenhum componente na composição.</td></tr>`;
   } else {
-    tbody.innerHTML = prod.composicao.map(item => {
-      const ins = App.insumos.find(i => i.id === item.insumoId);
-      if (!ins) return `<tr><td colspan="6" style="color:var(--text-muted)">Insumo removido</td></tr>`;
-      const custoItem = ins.custoUnitario * item.quantidade;
+    tbody.innerHTML = prod.composicao.map(itemOriginal => {
+      const item = normalizarItemComposicao(itemOriginal);
+      if (!item) return `<tr><td colspan="6" style="color:var(--text-muted)">Componente inválido</td></tr>`;
+
+      const componente = obterComponenteComposicao(item);
+      if (!componente) return `<tr><td colspan="6" style="color:var(--text-muted)">Componente removido</td></tr>`;
+
+      const custoUnitario = obterCustoUnitarioComponente(item);
+      if (Number.isNaN(custoUnitario)) {
+        return `<tr><td colspan="6" style="color:var(--coral)">Ciclo de produto detectado em ${componente.nome}</td></tr>`;
+      }
+
+      const custoItem = custoUnitario * item.quantidade;
       const pct = c.custoInsumos > 0 ? (custoItem / c.custoInsumos * 100) : 0;
+      const unidade = obterUnidadeComponente(item);
       return `
         <tr>
-          <td style="color:var(--text)">${ins.nome}</td>
-          <td>${badgeCategoria(ins.categoria)}</td>
-          <td>${formatNum(item.quantidade, 3)} ${ins.unidade}</td>
-          <td>${formatBRL(ins.custoUnitario)} / ${ins.unidade}</td>
+          <td style="color:var(--text)">${obterRotuloComponente(item)}: ${componente.nome}</td>
+          <td>${item.tipo === 'produto' ? '<span class="tag tag-produto">Produto</span>' : badgeCategoria(componente.categoria)}</td>
+          <td>${formatNum(item.quantidade, 3)} ${unidade}</td>
+          <td>${formatBRL(custoUnitario)} / ${unidade}</td>
           <td style="color:var(--coral-light);font-weight:600">${formatBRL(custoItem)}</td>
           <td>
             <div class="pct-bar">
@@ -901,17 +1075,29 @@ function init() {
   document.getElementById('btnAdicionarInsumo').addEventListener('click', () => {
     const sel = document.getElementById('selectInsumoComposicao');
     const insId = sel.value;
+    const option = sel.options[sel.selectedIndex];
+    const tipo = option ? option.dataset.tipo : '';
     const qtdEl = document.getElementById('qtdInsumoComposicao');
     const qtd = parseFloat(qtdEl.value);
 
-    if (!insId) { showToast('Selecione um insumo.', 'error'); return; }
+    if (!insId || !tipo) { showToast('Selecione um componente.', 'error'); return; }
     if (!qtd || qtd <= 0) { showToast('Informe uma quantidade válida.', 'error'); return; }
 
-    const jaExiste = App.composicaoTemp.findIndex(i => i.insumoId === insId);
+    const produtoEditandoId = document.getElementById('produtoId').value;
+    if (tipo === 'produto' && insId === produtoEditandoId) {
+      showToast('Um produto não pode compor a si mesmo.', 'error');
+      return;
+    }
+
+    const jaExiste = App.composicaoTemp.findIndex(i => {
+      const item = normalizarItemComposicao(i);
+      return item && item.tipo === tipo && item.itemId === insId;
+    });
     if (jaExiste !== -1) {
-      App.composicaoTemp[jaExiste].quantidade += qtd;
+      const itemAtual = normalizarItemComposicao(App.composicaoTemp[jaExiste]);
+      App.composicaoTemp[jaExiste] = { ...itemAtual, quantidade: itemAtual.quantidade + qtd };
     } else {
-      App.composicaoTemp.push({ insumoId: insId, quantidade: qtd });
+      App.composicaoTemp.push({ tipo, itemId: insId, quantidade: qtd });
     }
 
     sel.value = '';

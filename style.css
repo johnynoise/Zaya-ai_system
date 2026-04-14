@@ -519,6 +519,7 @@ tbody tr:hover td { background: #fafbfc; }
 .tag-laticinios { background: #eef4ff; color: #3b82f6; border-color: #d7e6ff; }
 .tag-complemento { background: #fff4ef; color: var(--coral); border-color: #f3d6cc; }
 .tag-embalagem { background: #f4effd; color: var(--acai-light); border-color: #e2d8f6; }
+.tag-produto { background: #eef2ff; color: #4338ca; border-color: #dbe3ff; }
 .tag-outros { background: #f3f4f6; color: #6b7280; border-color: #e5e7eb; }
 
 .composicao-section {

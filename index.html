@@ -215,12 +215,12 @@
               </div>
             </div>
 
-            <!-- Composição de Insumos -->
+            <!-- Composição de Componentes -->
             <div class="composicao-section">
-              <h4>Composição — Insumos do Produto</h4>
+              <h4>Composição — Insumos e Produtos</h4>
               <div class="composicao-add">
                 <select id="selectInsumoComposicao">
-                  <option value="">Selecione um insumo...</option>
+                  <option value="">Selecione um componente...</option>
                 </select>
                 <input type="number" id="qtdInsumoComposicao" placeholder="Quantidade" min="0.001" step="any" />
                 <span class="unidade-hint" id="unidadeHintComposicao">—</span>
@@ -229,7 +229,7 @@
               <table id="tabelaComposicao">
                 <thead>
                   <tr>
-                    <th>Insumo</th>
+                    <th>Item</th>
                     <th>Qtd</th>
                     <th>Unidade</th>
                     <th>Custo</th>
@@ -237,11 +237,11 @@
                   </tr>
                 </thead>
                 <tbody id="tbodyComposicao">
-                  <tr class="empty-row"><td colspan="5">Nenhum insumo adicionado.</td></tr>
+                  <tr class="empty-row"><td colspan="5">Nenhum componente adicionado.</td></tr>
                 </tbody>
               </table>
               <div class="composicao-total">
-                Custo total dos insumos: <strong id="custoTotalComposicao">R$ 0,00</strong>
+                Custo total dos componentes: <strong id="custoTotalComposicao">R$ 0,00</strong>
               </div>
             </div>
 
@@ -290,7 +290,7 @@
 
         <div class="calc-cards">
           <div class="calc-card custo">
-            <div class="calc-card-label">Custo de Insumos</div>
+            <div class="calc-card-label">Custo de Componentes</div>
             <div class="calc-card-value" id="calcCustoInsumos">R$ 0,00</div>
           </div>
           <div class="calc-card despesa">
@@ -321,7 +321,7 @@
             <table>
               <thead>
                 <tr>
-                  <th>Insumo</th>
+                  <th>Componente</th>
                   <th>Categoria</th>
                   <th>Qtd Usada</th>
                   <th>Custo Unit.</th>
