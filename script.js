@@ -114,7 +114,12 @@ function obterUnidadeProduto(prod) {
 
 function valorEstoqueProduto(prod) {
   const calc = calcularProduto(prod);
-  return (prod.estoqueAtual || 0) * (Number.isFinite(calc.custoTotal) ? calc.custoTotal : 0);
+  const rendimento = parsearRendimentoProduto(prod.volume);
+  const base = Number.isFinite(rendimento.quantidade) && rendimento.quantidade > 0
+    ? rendimento.quantidade
+    : 1;
+  const estoqueEmUnidades = (prod.estoqueAtual || 0) / base;
+  return estoqueEmUnidades * (Number.isFinite(calc.custoTotal) ? calc.custoTotal : 0);
 }
 
 function parsearRendimentoProduto(volume) {
