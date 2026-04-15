@@ -1509,9 +1509,19 @@ function atualizarSimulador(prod, custoTotal) {
 // ============================================================
 
 function verificarEstoqueVendaProduto(produto, quantidade) {
+  const rendimento = parsearRendimentoProduto(produto.volume);
+  const base = Number.isFinite(rendimento.quantidade) && rendimento.quantidade > 0 ? rendimento.quantidade : 1;
+  const quantidadeBase = quantidade * base;
   const disponivel = produto.estoqueAtual || 0;
-  if (disponivel < quantidade) {
-    return [{ produto: produto.nome, disponivel, necessario: quantidade, unidade: obterUnidadeProduto(produto) }];
+  if (disponivel < quantidadeBase) {
+    return [{
+      produto: produto.nome,
+      disponivel,
+      necessario: quantidadeBase,
+      unidade: obterUnidadeProduto(produto),
+      unidadesVendidas: quantidade,
+      volumeUnitario: rendimento.texto || produto.volume || ''
+    }];
   }
   return [];
 }
@@ -1519,15 +1529,18 @@ function verificarEstoqueVendaProduto(produto, quantidade) {
 function baixarEstoqueProduto(produto, quantidade, vendaId) {
   const idx = App.produtos.findIndex(p => p.id === produto.id);
   if (idx === -1) return;
+  const rendimento = parsearRendimentoProduto(produto.volume);
+  const base = Number.isFinite(rendimento.quantidade) && rendimento.quantidade > 0 ? rendimento.quantidade : 1;
+  const quantidadeBase = quantidade * base;
   const antes = App.produtos[idx].estoqueAtual || 0;
-  App.produtos[idx].estoqueAtual = Math.max(0, antes - quantidade);
+  App.produtos[idx].estoqueAtual = Math.max(0, antes - quantidadeBase);
   registrarMovEstoque({
     alvoTipo: 'produto',
     itemId: produto.id,
     tipo: 'venda',
-    quantidade,
+    quantidade: quantidadeBase,
     saldoApos: App.produtos[idx].estoqueAtual,
-    observacao: `Venda: ${produto.nome} ×${quantidade} (ref: ${vendaId})`,
+    observacao: `Venda: ${produto.nome} ×${quantidade} (${formatNum(quantidadeBase, 2)} ${obterUnidadeProduto(produto)}) (ref: ${vendaId})`,
   });
   Storage.saveProdutos(App.produtos);
 }
@@ -1579,7 +1592,7 @@ function atualizarPreviewVenda() {
   const avisoEl = document.getElementById('pvAvisoEstoque');
   if (avisos.length > 0) {
     avisoEl.classList.remove('hidden');
-    avisoEl.textContent = `⚠ Estoque insuficiente: ${avisos.map(a => `${a.produto} (dispon: ${formatNum(a.disponivel,2)} ${a.unidade}, necessário: ${formatNum(a.necessario,2)} ${a.unidade})`).join(', ')}`;
+    avisoEl.textContent = `⚠ Estoque insuficiente: ${avisos.map(a => `${a.produto} (dispon: ${formatNum(a.disponivel,2)} ${a.unidade}, necessário: ${formatNum(a.necessario,2)} ${a.unidade} para ${formatNum(a.unidadesVendidas,2)} un${a.volumeUnitario ? ` de ${a.volumeUnitario}` : ''})`).join(', ')}`;
   } else {
     avisoEl.classList.add('hidden');
   }
