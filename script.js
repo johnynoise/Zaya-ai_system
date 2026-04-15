@@ -808,6 +808,16 @@ function atualizarSelectProducaoProduto() {
     sel.appendChild(opt);
   });
   sel.value = val;
+  atualizarUnidadeProducao();
+}
+
+function atualizarUnidadeProducao() {
+  const selProduto = document.getElementById('producaoProduto');
+  const selUnidade = document.getElementById('producaoQuantidadeUnidade');
+  if (!selProduto || !selUnidade) return;
+  const prod = App.produtos.find(p => p.id === selProduto.value);
+  if (!prod) return;
+  selUnidade.value = obterUnidadeProduto(prod);
 }
 
 document.getElementById('btnRegistrarMov').addEventListener('click', () => {
@@ -851,6 +861,7 @@ document.getElementById('btnRegistrarMov').addEventListener('click', () => {
 });
 
 document.getElementById('btnRegistrarProducao').addEventListener('click', registrarProducaoProduto);
+document.getElementById('producaoProduto').addEventListener('change', atualizarUnidadeProducao);
 
 // ============================================================
 //  PRODUTOS
@@ -970,14 +981,20 @@ function resetFormProduto() {
   renderComposicaoTemp();
 }
 
-function verificarEstoqueParaProducao(produto, quantidade) {
+function calcularFatorProducao(produto, quantidadeBase) {
+  const rendimento = parsearRendimentoProduto(produto.volume);
+  if (!Number.isFinite(rendimento.quantidade) || rendimento.quantidade <= 0) return NaN;
+  return quantidadeBase / rendimento.quantidade;
+}
+
+function verificarEstoqueParaProducao(produto, fatorProducao) {
   const avisos = [];
   for (const io of (produto.composicao || [])) {
     const item = normalizarItemComposicao(io);
     if (!item || item.quantidade <= 0) continue;
     const comp = obterComponenteComposicao(item);
     if (!comp) continue;
-    const necessario = item.quantidade * quantidade;
+    const necessario = item.quantidade * fatorProducao;
     const disponivel = item.tipo === 'produto'
       ? (comp.estoqueAtual || 0)
       : (comp.estoqueAtual || 0);
@@ -994,11 +1011,11 @@ function verificarEstoqueParaProducao(produto, quantidade) {
   return avisos;
 }
 
-function consumirComponentesParaProducao(produto, quantidade, producaoId) {
+function consumirComponentesParaProducao(produto, fatorProducao, producaoId) {
   for (const io of (produto.composicao || [])) {
     const item = normalizarItemComposicao(io);
     if (!item || item.quantidade <= 0) continue;
-    const qtdUsada = item.quantidade * quantidade;
+    const qtdUsada = item.quantidade * fatorProducao;
 
     if (item.tipo === 'insumo') {
       const idx = App.insumos.findIndex(i => i.id === item.itemId);
@@ -1033,6 +1050,7 @@ function consumirComponentesParaProducao(produto, quantidade, producaoId) {
 async function registrarProducaoProduto() {
   const prodId = document.getElementById('producaoProduto').value;
   const qtd = parseFloat(document.getElementById('producaoQuantidade').value) || 0;
+  const unidadeEntrada = document.getElementById('producaoQuantidadeUnidade').value;
   const obs = document.getElementById('producaoObservacao').value.trim();
 
   if (!prodId) { showToast('Selecione um produto acabado.', 'error'); return; }
@@ -1041,23 +1059,36 @@ async function registrarProducaoProduto() {
   const prod = App.produtos.find(p => p.id === prodId);
   if (!prod) return;
 
-  const avisos = verificarEstoqueParaProducao(prod, qtd);
+  const unidadeBase = obterUnidadeProduto(prod);
+  const quantidadeBase = converterQuantidade(qtd, unidadeEntrada, unidadeBase);
+  if (!Number.isFinite(quantidadeBase) || quantidadeBase <= 0) {
+    showToast(`Unidade incompatível. Use uma unidade compatível com ${unidadeBase}.`, 'error');
+    return;
+  }
+
+  const fatorProducao = calcularFatorProducao(prod, quantidadeBase);
+  if (!Number.isFinite(fatorProducao) || fatorProducao <= 0) {
+    showToast('Não foi possível calcular o lote de produção.', 'error');
+    return;
+  }
+
+  const avisos = verificarEstoqueParaProducao(prod, fatorProducao);
   if (avisos.length > 0) {
     showToast(`Estoque insuficiente para produzir: ${avisos.map(a => `${a.nome} (${formatNum(a.disponivel, 2)} ${a.unidade} / necessário ${formatNum(a.necessario, 2)} ${a.unidade})`).join(', ')}`, 'error');
     return;
   }
 
   const producaoId = gerarId();
-  consumirComponentesParaProducao(prod, qtd, producaoId);
+  consumirComponentesParaProducao(prod, fatorProducao, producaoId);
 
   const idx = App.produtos.findIndex(p => p.id === prodId);
   if (idx === -1) return;
-  App.produtos[idx].estoqueAtual = (App.produtos[idx].estoqueAtual || 0) + qtd;
+  App.produtos[idx].estoqueAtual = (App.produtos[idx].estoqueAtual || 0) + quantidadeBase;
   registrarMovEstoque({
     alvoTipo: 'produto',
     itemId: prodId,
     tipo: 'producao',
-    quantidade: qtd,
+    quantidade: quantidadeBase,
     saldoApos: App.produtos[idx].estoqueAtual,
     observacao: obs || `Produção de ${prod.nome}`,
   });
@@ -1067,13 +1098,14 @@ async function registrarProducaoProduto() {
 
   document.getElementById('producaoProduto').value = '';
   document.getElementById('producaoQuantidade').value = '';
+  document.getElementById('producaoQuantidadeUnidade').value = 'ml';
   document.getElementById('producaoObservacao').value = '';
 
   renderEstoque();
   renderProdutos();
   atualizarSelectVendasReais();
   atualizarBadgeEstoque();
-  showToast(`Produção registrada! ${prod.nome} +${formatNum(qtd, 2)} ${obterUnidadeProduto(prod)}`);
+  showToast(`Produção registrada! ${prod.nome} +${formatNum(quantidadeBase, 2)} ${unidadeBase}`);
 }
 
 function abrirProducaoProduto(id) {
@@ -1083,6 +1115,7 @@ function abrirProducaoProduto(id) {
     sel.value = id;
     sel.dispatchEvent(new Event('change'));
   }
+  atualizarUnidadeProducao();
   const qtd = document.getElementById('producaoQuantidade');
   if (qtd) qtd.focus();
 }
