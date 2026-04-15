@@ -78,6 +78,8 @@ function badgeTipoMov(tipo) {
     ajuste_menos: ['tag-orange', 'Ajuste −'],
     perda: ['tag-red', 'Perda'],
     venda: ['tag-coral', 'Venda'],
+    producao: ['tag-green', 'Produção'],
+    consumo_producao: ['tag-orange', 'Consumo'],
   };
   const [cls, label] = map[tipo] || ['tag-outros', tipo];
   return `<span class="tag ${cls}">${label}</span>`;
@@ -94,6 +96,23 @@ function statusEstoque(ins) {
   if (atual <= 0) return { cls: 'status-zerado', label: 'Zerado' };
   if (minimo > 0 && atual <= minimo) return { cls: 'status-alerta', label: 'Alerta' };
   return { cls: 'status-ok', label: 'OK' };
+}
+
+function statusEstoqueProduto(prod) {
+  const atual = prod.estoqueAtual || 0;
+  const minimo = prod.estoqueMinimo || 0;
+  if (atual <= 0) return { cls: 'status-zerado', label: 'Zerado' };
+  if (minimo > 0 && atual <= minimo) return { cls: 'status-alerta', label: 'Alerta' };
+  return { cls: 'status-ok', label: 'OK' };
+}
+
+function obterUnidadeProduto(prod) {
+  return parsearRendimentoProduto(prod.volume).unidade || prod.rendimentoUnidade || 'un';
+}
+
+function valorEstoqueProduto(prod) {
+  const calc = calcularProduto(prod);
+  return (prod.estoqueAtual || 0) * (Number.isFinite(calc.custoTotal) ? calc.custoTotal : 0);
 }
 
 function parsearRendimentoProduto(volume) {
@@ -136,6 +155,12 @@ function normalizarItemComposicao(item) {
   if (item.insumoId) return { tipo: 'insumo', itemId: item.insumoId, quantidade, unidade };
   if (item.produtoId) return { tipo: 'produto', itemId: item.produtoId, quantidade, unidade };
   return null;
+}
+
+function obterTipoAlvoMovimento(mov) {
+  if (mov.alvoTipo) return mov.alvoTipo;
+  if (mov.produtoId) return 'produto';
+  return 'insumo';
 }
 
 function obterComponenteComposicao(item) {
@@ -269,52 +294,29 @@ function calcularProduto(produto, visitados = new Set()) {
   return { custoInsumos, despesas, custoTotal, margem: produto.margem, precoSugerido, lucro, ciclo: false };
 }
 
-/** Verifica se há estoque suficiente para produzir N unidades de um produto */
+/** Verifica se há estoque suficiente do produto acabado para venda */
 function verificarEstoqueProduto(produto, quantidade) {
-  const avisos = [];
-  for (const io of (produto.composicao || [])) {
-    const item = normalizarItemComposicao(io);
-    if (!item || item.tipo !== 'insumo') continue;
-    const ins = App.insumos.find(i => i.id === item.itemId);
-    if (!ins) continue;
-    const qtdNecessaria = item.quantidade * quantidade;
-    const estoqueAtual = ins.estoqueAtual || 0;
-    if (estoqueAtual < qtdNecessaria) {
-      avisos.push({ insumo: ins.nome, disponivel: estoqueAtual, necessario: qtdNecessaria, unidade: ins.unidade });
-    }
-  }
-  return avisos;
+  return verificarEstoqueVendaProduto(produto, quantidade);
 }
 
-/** Abate estoque dos insumos ao registrar venda */
+/** Abate estoque do produto acabado ao registrar venda */
 function abaterEstoque(produto, quantidade, vendaId) {
-  for (const io of (produto.composicao || [])) {
-    const item = normalizarItemComposicao(io);
-    if (!item || item.tipo !== 'insumo') continue;
-    const idx = App.insumos.findIndex(i => i.id === item.itemId);
-    if (idx === -1) continue;
-    const qtdUsada = item.quantidade * quantidade;
-    const antes = App.insumos[idx].estoqueAtual || 0;
-    App.insumos[idx].estoqueAtual = Math.max(0, antes - qtdUsada);
-    registrarMovEstoque({
-      insumoId: item.itemId,
-      tipo: 'venda',
-      quantidade: qtdUsada,
-      saldoApos: App.insumos[idx].estoqueAtual,
-      observacao: `Venda: ${produto.nome} ×${quantidade} (ref: ${vendaId})`,
-    });
-  }
-  Storage.saveInsumos(App.insumos);
+  baixarEstoqueProduto(produto, quantidade, vendaId);
 }
 
 // ============================================================
 //  MOVIMENTAÇÕES DE ESTOQUE
 // ============================================================
 
-function registrarMovEstoque({ insumoId, tipo, quantidade, custo, saldoApos, observacao }) {
+function registrarMovEstoque({ insumoId = null, produtoId = null, alvoTipo = null, itemId = null, tipo, quantidade, custo, saldoApos, observacao }) {
+  const tipoAlvo = alvoTipo || (produtoId ? 'produto' : 'insumo');
+  const resolvedItemId = itemId || insumoId || produtoId || null;
   App.movEstoque.push({
     id: gerarId(),
-    insumoId,
+    alvoTipo: tipoAlvo,
+    itemId: resolvedItemId,
+    insumoId: tipoAlvo === 'insumo' ? resolvedItemId : insumoId,
+    produtoId: tipoAlvo === 'produto' ? resolvedItemId : produtoId,
     tipo,
     quantidade,
     custo: custo || null,
@@ -329,15 +331,24 @@ function registrarMovEstoque({ insumoId, tipo, quantidade, custo, saldoApos, obs
 //  ALERTAS DE ESTOQUE
 // ============================================================
 
-function insumosEmAlerta() {
-  return App.insumos.filter(ins => {
+function itensEmAlerta() {
+  const insumos = App.insumos.filter(ins => {
     const st = statusEstoque(ins);
     return st.label === 'Alerta' || st.label === 'Zerado';
-  });
+  }).map(ins => ({ ...ins, tipoItem: 'insumo' }));
+  const produtos = App.produtos.filter(prod => {
+    const st = statusEstoqueProduto(prod);
+    return st.label === 'Alerta' || st.label === 'Zerado';
+  }).map(prod => ({ ...prod, tipoItem: 'produto' }));
+  return [...insumos, ...produtos];
+}
+
+function insumosEmAlerta() {
+  return itensEmAlerta().filter(item => item.tipoItem === 'insumo');
 }
 
 function atualizarBadgeEstoque() {
-  const alertas = insumosEmAlerta();
+  const alertas = itensEmAlerta();
   const badge = document.getElementById('badgeEstoque');
   if (alertas.length > 0) {
     badge.classList.remove('hidden');
@@ -354,7 +365,7 @@ function atualizarBadgeEstoque() {
 function renderDashboard() {
   const numInsumos  = App.insumos.length;
   const numProdutos = App.produtos.length;
-  const alertas     = insumosEmAlerta();
+  const alertas     = itensEmAlerta();
 
   // Vendas do dia
   const hoje = new Date().toDateString();
@@ -391,7 +402,10 @@ function renderDashboard() {
     alertDiv.innerHTML = `
       <div class="alerta-banner">
         <strong>⚠ Estoque crítico:</strong>
-        ${alertas.map(i => `<span class="alerta-item">${i.nome} (${formatNum(i.estoqueAtual,2)} ${i.unidade})</span>`).join('')}
+        ${alertas.map(i => {
+          const unidade = i.tipoItem === 'produto' ? obterUnidadeProduto(i) : i.unidade;
+          return `<span class="alerta-item">${i.nome} (${formatNum(i.estoqueAtual,2)} ${unidade})</span>`;
+        }).join('')}
         <button class="btn-small" data-page="estoque" style="margin-left:auto">Ver estoque →</button>
       </div>`;
   } else {
@@ -415,13 +429,14 @@ function renderDashboard() {
   // Estoque crítico
   const dashEstoque = document.getElementById('dashEstoqueCritico');
   if (!alertas.length) {
-    dashEstoque.innerHTML = '<p class="empty-msg" style="color:var(--green)">✓ Todos os insumos com estoque adequado.</p>';
+    dashEstoque.innerHTML = '<p class="empty-msg" style="color:var(--green)">✓ Todos os itens com estoque adequado.</p>';
   } else {
     dashEstoque.innerHTML = alertas.slice(0, 5).map(ins => {
       const st = statusEstoque(ins);
+      const unidade = ins.tipoItem === 'produto' ? obterUnidadeProduto(ins) : ins.unidade;
       return `<div class="dash-item">
         <span class="dash-item-name">${ins.nome}</span>
-        <span class="dash-item-value"><span class="status-badge ${st.cls}">${formatNum(ins.estoqueAtual,2)} ${ins.unidade}</span></span>
+        <span class="dash-item-value"><span class="status-badge ${st.cls}">${formatNum(ins.estoqueAtual,2)} ${unidade}</span></span>
       </div>`;
     }).join('');
   }
@@ -634,15 +649,23 @@ function filtrarEstoque(tipo) {
 function renderEstoque() {
   // Stats
   const totalInsumos = App.insumos.length;
-  const emAlerta = App.insumos.filter(i => statusEstoque(i).label === 'Alerta').length;
-  const zerados  = App.insumos.filter(i => statusEstoque(i).label === 'Zerado').length;
-  const valorTotal = App.insumos.reduce((a, i) => a + ((i.estoqueAtual || 0) * (i.custoUnitario || 0)), 0);
+  const totalProdutos = App.produtos.length;
+  const emAlerta = itensEmAlerta().filter(item => item.tipoItem === 'insumo' || item.tipoItem === 'produto').length;
+  const zerados  = [...App.insumos.filter(i => statusEstoque(i).label === 'Zerado'), ...App.produtos.filter(p => statusEstoqueProduto(p).label === 'Zerado')].length;
+  const valorTotalInsumos = App.insumos.reduce((a, i) => a + ((i.estoqueAtual || 0) * (i.custoUnitario || 0)), 0);
+  const valorTotalProdutos = App.produtos.reduce((a, p) => a + valorEstoqueProduto(p), 0);
+  const valorTotal = valorTotalInsumos + valorTotalProdutos;
 
   document.getElementById('statsEstoque').innerHTML = `
     <div class="stat-card" style="--accent-color:var(--acai-light)">
       <div class="stat-label">Total de Insumos</div>
       <div class="stat-value">${totalInsumos}</div>
       <div class="stat-sub">cadastrados</div>
+    </div>
+    <div class="stat-card" style="--accent-color:var(--green)">
+      <div class="stat-label">Total de Produtos</div>
+      <div class="stat-value">${totalProdutos}</div>
+      <div class="stat-sub">acabados</div>
     </div>
     <div class="stat-card" style="--accent-color:${emAlerta > 0 ? 'var(--coral)' : 'var(--green)'}">
       <div class="stat-label">Em Alerta</div>
@@ -662,7 +685,9 @@ function renderEstoque() {
   `;
 
   atualizarSelectMovInsumo();
+  atualizarSelectProducaoProduto();
   renderTabelaEstoque();
+  renderTabelaProdutosEstoque();
   renderHistoricoMov();
 }
 
@@ -697,6 +722,36 @@ function renderTabelaEstoque() {
   }).join('');
 }
 
+function renderTabelaProdutosEstoque() {
+  const tbody = document.getElementById('tbodyProdutosEstoque');
+  const lista = [...App.produtos];
+
+  if (!lista.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">Nenhum produto cadastrado.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = lista.map(prod => {
+    const st = statusEstoqueProduto(prod);
+    const custoUnit = calcularProduto(prod).custoTotal || 0;
+    const valorEst = valorEstoqueProduto(prod);
+    const unidade = obterUnidadeProduto(prod);
+    return `
+      <tr>
+        <td><strong>${prod.nome}</strong>${prod.volume ? ` <span class="tag tag-canal" style="margin-left:6px">${prod.volume}</span>` : ''}</td>
+        <td><strong style="font-size:1rem">${formatNum(prod.estoqueAtual || 0, 2)} ${unidade}</strong></td>
+        <td>${prod.estoqueMinimo > 0 ? formatNum(prod.estoqueMinimo, 2) + ' ' + unidade : '—'}</td>
+        <td><span class="status-badge ${st.cls}">${st.label}</span></td>
+        <td>${formatBRL(custoUnit)} / ${unidade}</td>
+        <td style="font-weight:600">${formatBRL(valorEst)}</td>
+        <td>
+          <button class="btn-small" onclick="abrirProducaoProduto('${prod.id}')">📦 Produzir</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
 function renderHistoricoMov() {
   const tbody = document.getElementById('tbodyHistMov');
   const movs = [...App.movEstoque].sort((a, b) => new Date(b.data) - new Date(a.data)).slice(0, 100);
@@ -707,16 +762,19 @@ function renderHistoricoMov() {
   }
 
   tbody.innerHTML = movs.map(m => {
-    const ins = App.insumos.find(i => i.id === m.insumoId);
-    const nomeIns = ins ? ins.nome : 'Insumo removido';
-    const unidade = ins ? ins.unidade : '';
-    const sinal = ['entrada','ajuste_mais'].includes(m.tipo) ? '+' : '−';
+    const alvoTipo = obterTipoAlvoMovimento(m);
+    const item = alvoTipo === 'produto'
+      ? App.produtos.find(p => p.id === (m.itemId || m.produtoId))
+      : App.insumos.find(i => i.id === (m.itemId || m.insumoId));
+    const nomeItem = item ? item.nome : (alvoTipo === 'produto' ? 'Produto removido' : 'Insumo removido');
+    const unidade = item ? (alvoTipo === 'produto' ? obterUnidadeProduto(item) : item.unidade) : '';
+    const sinal = ['entrada','ajuste_mais','producao'].includes(m.tipo) ? '+' : '−';
     return `
       <tr>
         <td style="white-space:nowrap;font-size:.82rem">${formatDateTime(m.data)}</td>
-        <td>${nomeIns}</td>
+        <td>${nomeItem}</td>
         <td>${badgeTipoMov(m.tipo)}</td>
-        <td style="font-weight:600;color:${['entrada','ajuste_mais'].includes(m.tipo) ? 'var(--green)' : 'var(--coral)'}">${sinal}${formatNum(m.quantidade, 2)} ${unidade}</td>
+        <td style="font-weight:600;color:${['entrada','ajuste_mais','producao'].includes(m.tipo) ? 'var(--green)' : 'var(--coral)'}">${sinal}${formatNum(m.quantidade, 2)} ${unidade}</td>
         <td>${m.custo ? formatBRL(m.custo) : '—'}</td>
         <td>${formatNum(m.saldoApos || 0, 2)} ${unidade}</td>
         <td style="font-size:.82rem;color:var(--text-3)">${m.observacao || '—'}</td>
@@ -733,6 +791,20 @@ function atualizarSelectMovInsumo() {
     const opt = document.createElement('option');
     opt.value = ins.id;
     opt.textContent = `${ins.nome} (${formatNum(ins.estoqueAtual || 0, 2)} ${ins.unidade})`;
+    sel.appendChild(opt);
+  });
+  sel.value = val;
+}
+
+function atualizarSelectProducaoProduto() {
+  const sel = document.getElementById('producaoProduto');
+  if (!sel) return;
+  const val = sel.value;
+  sel.innerHTML = '<option value="">Selecione um produto...</option>';
+  App.produtos.forEach(prod => {
+    const opt = document.createElement('option');
+    opt.value = prod.id;
+    opt.textContent = `${prod.nome}${prod.volume ? ` (${prod.volume})` : ''} — estq: ${formatNum(prod.estoqueAtual || 0, 2)} ${obterUnidadeProduto(prod)}`;
     sel.appendChild(opt);
   });
   sel.value = val;
@@ -778,6 +850,8 @@ document.getElementById('btnRegistrarMov').addEventListener('click', () => {
   showToast(`Movimentação registrada! Novo estoque: ${formatNum(novoEstoque, 2)} ${ins.unidade}`);
 });
 
+document.getElementById('btnRegistrarProducao').addEventListener('click', registrarProducaoProduto);
+
 // ============================================================
 //  PRODUTOS
 // ============================================================
@@ -797,6 +871,8 @@ function renderProdutos(filtro = '') {
     const precoSugerido = c.ciclo ? '—' : formatBRL(c.precoSugerido);
     const precoVenda    = prod.precoVenda ? formatBRL(prod.precoVenda) : '—';
     const lucro         = c.ciclo ? '—' : formatBRL(c.lucro);
+    const stEstoque     = statusEstoqueProduto(prod);
+    const unidadeEst    = obterUnidadeProduto(prod);
     return `
       <div class="produto-card">
         <div class="produto-card-header">
@@ -821,10 +897,15 @@ function renderProdutos(filtro = '') {
             <div class="produto-stat-label">Margem</div>
             <div class="produto-stat-val val-margem">${prod.margem}%</div>
           </div>
+          <div class="produto-stat">
+            <div class="produto-stat-label">Estoque</div>
+            <div class="produto-stat-val" style="color:${stEstoque.cls === 'status-zerado' ? 'var(--coral)' : stEstoque.cls === 'status-alerta' ? 'var(--orange)' : 'var(--green)'}">${formatNum(prod.estoqueAtual || 0, 2)} ${unidadeEst}</div>
+          </div>
         </div>
         <div class="produto-actions">
           <button class="btn-edit" onclick="editarProduto('${prod.id}')">✎ Editar</button>
           <button class="btn-small" onclick="verCalculo('${prod.id}')">📊 Análise</button>
+          <button class="btn-small" onclick="abrirProducaoProduto('${prod.id}')">📦 Produzir</button>
           <button class="btn-delete" onclick="excluirProduto('${prod.id}')">✕</button>
         </div>
       </div>
@@ -849,6 +930,8 @@ function editarProduto(id) {
   document.getElementById('produtoMargem').value           = prod.margem;
   document.getElementById('produtoDespesas').value         = prod.despesas;
   document.getElementById('produtoPrecoVenda').value       = prod.precoVenda || '';
+  document.getElementById('produtoEstoqueAtual').value     = prod.estoqueAtual ?? 0;
+  document.getElementById('produtoEstoqueMinimo').value    = prod.estoqueMinimo ?? 0;
   document.getElementById('produtoDescricao').value        = prod.descricao || '';
   document.getElementById('formProdutoTitulo').textContent = 'Editar Produto';
   App.composicaoTemp = (prod.composicao || []).map(item => ({ ...item }));
@@ -880,9 +963,128 @@ function resetFormProduto() {
   document.getElementById('produtoMargem').value = 80;
   document.getElementById('produtoDespesas').value = 0;
   document.getElementById('produtoPrecoVenda').value = '';
+  document.getElementById('produtoEstoqueAtual').value = 0;
+  document.getElementById('produtoEstoqueMinimo').value = 0;
   document.getElementById('formProdutoTitulo').textContent = 'Novo Produto';
   App.composicaoTemp = [];
   renderComposicaoTemp();
+}
+
+function verificarEstoqueParaProducao(produto, quantidade) {
+  const avisos = [];
+  for (const io of (produto.composicao || [])) {
+    const item = normalizarItemComposicao(io);
+    if (!item || item.quantidade <= 0) continue;
+    const comp = obterComponenteComposicao(item);
+    if (!comp) continue;
+    const necessario = item.quantidade * quantidade;
+    const disponivel = item.tipo === 'produto'
+      ? (comp.estoqueAtual || 0)
+      : (comp.estoqueAtual || 0);
+    if (disponivel < necessario) {
+      avisos.push({
+        tipo: item.tipo,
+        nome: comp.nome,
+        disponivel,
+        necessario,
+        unidade: item.tipo === 'produto' ? obterUnidadeProduto(comp) : (comp.unidade || 'un'),
+      });
+    }
+  }
+  return avisos;
+}
+
+function consumirComponentesParaProducao(produto, quantidade, producaoId) {
+  for (const io of (produto.composicao || [])) {
+    const item = normalizarItemComposicao(io);
+    if (!item || item.quantidade <= 0) continue;
+    const qtdUsada = item.quantidade * quantidade;
+
+    if (item.tipo === 'insumo') {
+      const idx = App.insumos.findIndex(i => i.id === item.itemId);
+      if (idx === -1) continue;
+      const antes = App.insumos[idx].estoqueAtual || 0;
+      App.insumos[idx].estoqueAtual = Math.max(0, antes - qtdUsada);
+      registrarMovEstoque({
+        alvoTipo: 'insumo',
+        itemId: item.itemId,
+        tipo: 'consumo_producao',
+        quantidade: qtdUsada,
+        saldoApos: App.insumos[idx].estoqueAtual,
+        observacao: `Produção de ${produto.nome} ×${quantidade} (ref: ${producaoId})`,
+      });
+    } else {
+      const idx = App.produtos.findIndex(p => p.id === item.itemId);
+      if (idx === -1) continue;
+      const antes = App.produtos[idx].estoqueAtual || 0;
+      App.produtos[idx].estoqueAtual = Math.max(0, antes - qtdUsada);
+      registrarMovEstoque({
+        alvoTipo: 'produto',
+        itemId: item.itemId,
+        tipo: 'consumo_producao',
+        quantidade: qtdUsada,
+        saldoApos: App.produtos[idx].estoqueAtual,
+        observacao: `Uso de produto em ${produto.nome} ×${quantidade} (ref: ${producaoId})`,
+      });
+    }
+  }
+}
+
+async function registrarProducaoProduto() {
+  const prodId = document.getElementById('producaoProduto').value;
+  const qtd = parseFloat(document.getElementById('producaoQuantidade').value) || 0;
+  const obs = document.getElementById('producaoObservacao').value.trim();
+
+  if (!prodId) { showToast('Selecione um produto acabado.', 'error'); return; }
+  if (qtd <= 0) { showToast('Informe uma quantidade válida.', 'error'); return; }
+
+  const prod = App.produtos.find(p => p.id === prodId);
+  if (!prod) return;
+
+  const avisos = verificarEstoqueParaProducao(prod, qtd);
+  if (avisos.length > 0) {
+    showToast(`Estoque insuficiente para produzir: ${avisos.map(a => `${a.nome} (${formatNum(a.disponivel, 2)} ${a.unidade} / necessário ${formatNum(a.necessario, 2)} ${a.unidade})`).join(', ')}`, 'error');
+    return;
+  }
+
+  const producaoId = gerarId();
+  consumirComponentesParaProducao(prod, qtd, producaoId);
+
+  const idx = App.produtos.findIndex(p => p.id === prodId);
+  if (idx === -1) return;
+  App.produtos[idx].estoqueAtual = (App.produtos[idx].estoqueAtual || 0) + qtd;
+  registrarMovEstoque({
+    alvoTipo: 'produto',
+    itemId: prodId,
+    tipo: 'producao',
+    quantidade: qtd,
+    saldoApos: App.produtos[idx].estoqueAtual,
+    observacao: obs || `Produção de ${prod.nome}`,
+  });
+
+  Storage.saveInsumos(App.insumos);
+  Storage.saveProdutos(App.produtos);
+
+  document.getElementById('producaoProduto').value = '';
+  document.getElementById('producaoQuantidade').value = '';
+  document.getElementById('producaoObservacao').value = '';
+
+  renderEstoque();
+  renderProdutos();
+  atualizarSelectVendasReais();
+  atualizarBadgeEstoque();
+  showToast(`Produção registrada! ${prod.nome} +${formatNum(qtd, 2)} ${obterUnidadeProduto(prod)}`);
+}
+
+function abrirProducaoProduto(id) {
+  navegarPara('estoque');
+  const sel = document.getElementById('producaoProduto');
+  if (sel) {
+    sel.value = id;
+    sel.dispatchEvent(new Event('change'));
+  }
+  const qtd = document.getElementById('producaoQuantidade');
+  if (qtd) qtd.focus();
 }
 
 function produtoTemCiclo(produtoId, composicao, produtoRascunho, visitados = new Set()) {
@@ -910,6 +1112,8 @@ document.getElementById('formProduto').addEventListener('submit', function(e) {
   const margem          = parseFloat(document.getElementById('produtoMargem').value) || 0;
   const despesas        = parseFloat(document.getElementById('produtoDespesas').value) || 0;
   const precoVenda      = parseFloat(document.getElementById('produtoPrecoVenda').value) || null;
+  const estoqueAtual    = parseFloat(document.getElementById('produtoEstoqueAtual').value) || 0;
+  const estoqueMinimo   = parseFloat(document.getElementById('produtoEstoqueMinimo').value) || 0;
   const descricao       = document.getElementById('produtoDescricao').value.trim();
 
   if (!nome) { showToast('Informe o nome do produto.', 'error'); return; }
@@ -919,7 +1123,7 @@ document.getElementById('formProduto').addEventListener('submit', function(e) {
   const rascunho = { id: id || gerarId(), composicao };
   if (produtoTemCiclo(rascunho.id, composicao, rascunho)) { showToast('Composição circular detectada!', 'error'); return; }
 
-  const dados = { nome, volume: `${rendimentoQtd}${rendimentoUnid}`, rendimentoQtd, rendimentoUnidade: rendimentoUnid, margem, despesas, precoVenda, descricao, composicao };
+  const dados = { nome, volume: `${rendimentoQtd}${rendimentoUnid}`, rendimentoQtd, rendimentoUnidade: rendimentoUnid, margem, despesas, precoVenda, estoqueAtual, estoqueMinimo, descricao, composicao };
 
   if (id) {
     const idx = App.produtos.findIndex(p => p.id === id);
@@ -1155,6 +1359,30 @@ function atualizarSimulador(prod, custoTotal) {
 //  VENDAS REAIS
 // ============================================================
 
+function verificarEstoqueVendaProduto(produto, quantidade) {
+  const disponivel = produto.estoqueAtual || 0;
+  if (disponivel < quantidade) {
+    return [{ produto: produto.nome, disponivel, necessario: quantidade, unidade: obterUnidadeProduto(produto) }];
+  }
+  return [];
+}
+
+function baixarEstoqueProduto(produto, quantidade, vendaId) {
+  const idx = App.produtos.findIndex(p => p.id === produto.id);
+  if (idx === -1) return;
+  const antes = App.produtos[idx].estoqueAtual || 0;
+  App.produtos[idx].estoqueAtual = Math.max(0, antes - quantidade);
+  registrarMovEstoque({
+    alvoTipo: 'produto',
+    itemId: produto.id,
+    tipo: 'venda',
+    quantidade,
+    saldoApos: App.produtos[idx].estoqueAtual,
+    observacao: `Venda: ${produto.nome} ×${quantidade} (ref: ${vendaId})`,
+  });
+  Storage.saveProdutos(App.produtos);
+}
+
 function atualizarSelectVendasReais() {
   const sels = ['vendaRealProduto', 'filtroVendasProduto'];
   sels.forEach(selId => {
@@ -1165,7 +1393,7 @@ function atualizarSelectVendasReais() {
     App.produtos.filter(p => !calcularProduto(p).ciclo).forEach(p => {
       const opt = document.createElement('option');
       opt.value = p.id;
-      opt.textContent = `${p.nome}${p.volume ? ` (${p.volume})` : ''}`;
+      opt.textContent = `${p.nome}${p.volume ? ` (${p.volume})` : ''} — estq: ${formatNum(p.estoqueAtual || 0, 2)} ${obterUnidadeProduto(p)}`;
       sel.appendChild(opt);
     });
     sel.value = val;
@@ -1198,11 +1426,11 @@ function atualizarPreviewVenda() {
   document.getElementById('pvLucro').style.color = lucro >= 0 ? 'var(--green)' : 'var(--coral)';
 
   // Verifica alertas de estoque
-  const avisos = verificarEstoqueProduto(prod, qtd);
+  const avisos = verificarEstoqueVendaProduto(prod, qtd);
   const avisoEl = document.getElementById('pvAvisoEstoque');
   if (avisos.length > 0) {
     avisoEl.classList.remove('hidden');
-    avisoEl.textContent = `⚠ Estoque insuficiente: ${avisos.map(a => `${a.insumo} (dispon: ${formatNum(a.disponivel,2)}, necessário: ${formatNum(a.necessario,2)})`).join(', ')}`;
+    avisoEl.textContent = `⚠ Estoque insuficiente: ${avisos.map(a => `${a.produto} (dispon: ${formatNum(a.disponivel,2)} ${a.unidade}, necessário: ${formatNum(a.necessario,2)} ${a.unidade})`).join(', ')}`;
   } else {
     avisoEl.classList.add('hidden');
   }
@@ -1240,11 +1468,10 @@ document.getElementById('btnRegistrarVenda').addEventListener('click', async () 
   const prod = App.produtos.find(p => p.id === prodId);
   if (!prod) return;
 
-  const avisos = verificarEstoqueProduto(prod, qtd);
+  const avisos = verificarEstoqueVendaProduto(prod, qtd);
   if (avisos.length > 0) {
-    const msg = `Estoque insuficiente para: ${avisos.map(a => a.insumo).join(', ')}. Deseja registrar mesmo assim?`;
-    const ok = await confirmar('Estoque Insuficiente', msg);
-    if (!ok) return;
+    showToast(`Estoque insuficiente para ${prod.nome}. Produza mais unidades antes de registrar a venda.`, 'error');
+    return;
   }
 
   const c = calcularProduto(prod);
@@ -1273,7 +1500,7 @@ document.getElementById('btnRegistrarVenda').addEventListener('click', async () 
   App.vendas.push(venda);
   Storage.saveVendas(App.vendas);
 
-  abaterEstoque(prod, qtd, vendaId);
+  baixarEstoqueProduto(prod, qtd, vendaId);
 
   // Reset
   document.getElementById('vendaRealProduto').value = '';
@@ -1533,10 +1760,13 @@ function carregarDadosMock() {
   const [p1,p2,p3] = [gerarId(),gerarId(),gerarId()];
   const produtos = [
     { id:p1, nome:'Açaí Tradicional',  volume:'300ml', margem:75, despesas:0.20, precoVenda:12.90, descricao:'Açaí puro com granola',
+      estoqueAtual:12, estoqueMinimo:3,
       composicao:[{tipo:'insumo',itemId:i1,quantidade:0.25,unidade:'kg'},{tipo:'insumo',itemId:i4,quantidade:30,unidade:'g'},{tipo:'insumo',itemId:i6,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i7,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i8,quantidade:1,unidade:'un'}] },
     { id:p2, nome:'Açaí Cremoso',      volume:'500ml', margem:80, despesas:0.30, precoVenda:18.90, descricao:'Com leite condensado e granola',
+      estoqueAtual:8, estoqueMinimo:2,
       composicao:[{tipo:'insumo',itemId:i1,quantidade:0.38,unidade:'kg'},{tipo:'insumo',itemId:i2,quantidade:60,unidade:'g'},{tipo:'insumo',itemId:i3,quantidade:20,unidade:'g'},{tipo:'insumo',itemId:i4,quantidade:40,unidade:'g'},{tipo:'insumo',itemId:i6,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i7,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i8,quantidade:1,unidade:'un'}] },
     { id:p3, nome:'Açaí com Morango',  volume:'1l',    margem:70, despesas:0.50, precoVenda:28.00, descricao:'Açaí, morango e granola premium',
+      estoqueAtual:4, estoqueMinimo:1,
       composicao:[{tipo:'insumo',itemId:i1,quantidade:0.7,unidade:'kg'},{tipo:'insumo',itemId:i5,quantidade:150,unidade:'g'},{tipo:'insumo',itemId:i4,quantidade:60,unidade:'g'},{tipo:'insumo',itemId:i2,quantidade:80,unidade:'g'},{tipo:'insumo',itemId:i6,quantidade:2,unidade:'un'},{tipo:'insumo',itemId:i7,quantidade:2,unidade:'un'},{tipo:'insumo',itemId:i8,quantidade:1,unidade:'un'}] },
   ];
   Storage.saveInsumos(insumos);
@@ -1550,7 +1780,13 @@ function carregarDadosMock() {
 
 function init() {
   App.insumos     = Storage.getInsumos();
-  App.produtos    = Storage.getProdutos();
+  App.produtos    = Storage.getProdutos().map(prod => ({
+    estoqueAtual: 0,
+    estoqueMinimo: 0,
+    ...prod,
+    estoqueAtual: Number.isFinite(parseFloat(prod.estoqueAtual)) ? parseFloat(prod.estoqueAtual) : 0,
+    estoqueMinimo: Number.isFinite(parseFloat(prod.estoqueMinimo)) ? parseFloat(prod.estoqueMinimo) : 0,
+  }));
   App.vendas      = Storage.getVendas();
   App.movEstoque  = Storage.getMovEstoque();
 
@@ -1559,6 +1795,8 @@ function init() {
     App.insumos  = mock.insumos;
     App.produtos = mock.produtos;
   }
+
+  Storage.saveProdutos(App.produtos);
 
   renderDashboard();
   renderInsumos();

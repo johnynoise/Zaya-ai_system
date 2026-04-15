@@ -277,6 +277,32 @@
         </div>
       </div>
 
+        <!-- Produção de produtos acabados -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Produzir Produto Acabado</h3>
+          </div>
+          <div class="form-grid form-grid-mov">
+            <div class="form-group span-2">
+              <label>Produto Acabado *</label>
+              <select id="producaoProduto">
+                <option value="">Selecione um produto...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Quantidade *</label>
+              <input type="number" id="producaoQuantidade" placeholder="Ex: 10" min="0.001" step="any" />
+            </div>
+            <div class="form-group span-2">
+              <label>Observação</label>
+              <input type="text" id="producaoObservacao" placeholder="Ex: Produção do dia / lote 12" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-primary" id="btnRegistrarProducao">Registrar Produção</button>
+          </div>
+        </div>
+
       <!-- Tabela de estoque -->
       <div class="card">
         <div class="card-header">
@@ -308,6 +334,31 @@
         </div>
       </div>
 
+      <!-- Tabela de produtos acabados -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Estoque de Produtos Acabados</h3>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Estoque Atual</th>
+                <th>Mínimo</th>
+                <th>Status</th>
+                <th>Custo Unit.</th>
+                <th>Valor em Estoque</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyProdutosEstoque">
+              <tr class="empty-row"><td colspan="7">Nenhum produto cadastrado.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Histórico de movimentações -->
       <div class="card">
         <div class="card-header">
@@ -319,7 +370,7 @@
             <thead>
               <tr>
                 <th>Data/Hora</th>
-                <th>Insumo</th>
+                <th>Item</th>
                 <th>Tipo</th>
                 <th>Quantidade</th>
                 <th>Custo</th>
@@ -381,6 +432,14 @@
                 <label>Preço de Venda (R$)</label>
                 <input type="number" id="produtoPrecoVenda" placeholder="Opcional" min="0" step="0.01" />
                 <small class="field-hint">Se informado, usa esse valor para vendas reais</small>
+              </div>
+              <div class="form-group">
+                <label>Estoque Atual</label>
+                <input type="number" id="produtoEstoqueAtual" placeholder="Ex: 10" min="0" step="any" value="0" />
+              </div>
+              <div class="form-group">
+                <label>Estoque Mínimo</label>
+                <input type="number" id="produtoEstoqueMinimo" placeholder="Ex: 3" min="0" step="any" value="0" />
               </div>
               <div class="form-group span-2">
                 <label>Descrição (opcional)</label>
