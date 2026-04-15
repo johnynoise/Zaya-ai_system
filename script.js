@@ -80,6 +80,8 @@ function badgeTipoMov(tipo) {
     venda: ['tag-coral', 'Venda'],
     producao: ['tag-green', 'Produção'],
     consumo_producao: ['tag-orange', 'Consumo'],
+    estorno_producao_saida: ['tag-red', 'Estorno'],
+    estorno_producao_entrada: ['tag-green', 'Retorno'],
   };
   const [cls, label] = map[tipo] || ['tag-outros', tipo];
   return `<span class="tag ${cls}">${label}</span>`;
@@ -746,6 +748,7 @@ function renderTabelaProdutosEstoque() {
         <td style="font-weight:600">${formatBRL(valorEst)}</td>
         <td>
           <button class="btn-small" onclick="abrirProducaoProduto('${prod.id}')">📦 Produzir</button>
+          <button class="btn-small btn-danger-outline" onclick="abrirEstornoProduto('${prod.id}')">↩ Estornar</button>
         </td>
       </tr>
     `;
@@ -768,13 +771,13 @@ function renderHistoricoMov() {
       : App.insumos.find(i => i.id === (m.itemId || m.insumoId));
     const nomeItem = item ? item.nome : (alvoTipo === 'produto' ? 'Produto removido' : 'Insumo removido');
     const unidade = item ? (alvoTipo === 'produto' ? obterUnidadeProduto(item) : item.unidade) : '';
-    const sinal = ['entrada','ajuste_mais','producao'].includes(m.tipo) ? '+' : '−';
+    const sinal = ['entrada','ajuste_mais','producao','estorno_producao_entrada'].includes(m.tipo) ? '+' : '−';
     return `
       <tr>
         <td style="white-space:nowrap;font-size:.82rem">${formatDateTime(m.data)}</td>
         <td>${nomeItem}</td>
         <td>${badgeTipoMov(m.tipo)}</td>
-        <td style="font-weight:600;color:${['entrada','ajuste_mais','producao'].includes(m.tipo) ? 'var(--green)' : 'var(--coral)'}">${sinal}${formatNum(m.quantidade, 2)} ${unidade}</td>
+        <td style="font-weight:600;color:${['entrada','ajuste_mais','producao','estorno_producao_entrada'].includes(m.tipo) ? 'var(--green)' : 'var(--coral)'}">${sinal}${formatNum(m.quantidade, 2)} ${unidade}</td>
         <td>${m.custo ? formatBRL(m.custo) : '—'}</td>
         <td>${formatNum(m.saldoApos || 0, 2)} ${unidade}</td>
         <td style="font-size:.82rem;color:var(--text-3)">${m.observacao || '—'}</td>
@@ -917,6 +920,7 @@ function renderProdutos(filtro = '') {
           <button class="btn-edit" onclick="editarProduto('${prod.id}')">✎ Editar</button>
           <button class="btn-small" onclick="verCalculo('${prod.id}')">📊 Análise</button>
           <button class="btn-small" onclick="abrirProducaoProduto('${prod.id}')">📦 Produzir</button>
+          <button class="btn-small btn-danger-outline" onclick="abrirEstornoProduto('${prod.id}')">↩ Estornar</button>
           <button class="btn-delete" onclick="excluirProduto('${prod.id}')">✕</button>
         </div>
       </div>
@@ -1028,7 +1032,7 @@ function consumirComponentesParaProducao(produto, fatorProducao, producaoId) {
         tipo: 'consumo_producao',
         quantidade: qtdUsada,
         saldoApos: App.insumos[idx].estoqueAtual,
-        observacao: `Produção de ${produto.nome} ×${quantidade} (ref: ${producaoId})`,
+        observacao: `Produção de ${produto.nome} ×${fatorProducao} (ref: ${producaoId})`,
       });
     } else {
       const idx = App.produtos.findIndex(p => p.id === item.itemId);
@@ -1041,7 +1045,7 @@ function consumirComponentesParaProducao(produto, fatorProducao, producaoId) {
         tipo: 'consumo_producao',
         quantidade: qtdUsada,
         saldoApos: App.produtos[idx].estoqueAtual,
-        observacao: `Uso de produto em ${produto.nome} ×${quantidade} (ref: ${producaoId})`,
+        observacao: `Uso de produto em ${produto.nome} ×${fatorProducao} (ref: ${producaoId})`,
       });
     }
   }
@@ -1119,6 +1123,113 @@ function abrirProducaoProduto(id) {
   const qtd = document.getElementById('producaoQuantidade');
   if (qtd) qtd.focus();
 }
+
+let estornoProdutoId = null;
+function abrirEstornoProduto(id) {
+  const prod = App.produtos.find(p => p.id === id);
+  if (!prod) return;
+  estornoProdutoId = id;
+  document.getElementById('modalEstornoNome').textContent = `${prod.nome} — atual: ${formatNum(prod.estoqueAtual || 0, 2)} ${obterUnidadeProduto(prod)}`;
+  document.getElementById('inputEstornoQuantidade').value = '';
+  document.getElementById('inputEstornoUnidade').value = obterUnidadeProduto(prod);
+  document.getElementById('inputEstornoMotivo').value = 'Produto produzido incorretamente';
+  document.getElementById('modalEstornoProducao').classList.remove('hidden');
+}
+
+function reabastecerComponentesDeProducao(produto, fatorProducao, estornoId) {
+  for (const io of (produto.composicao || [])) {
+    const item = normalizarItemComposicao(io);
+    if (!item || item.quantidade <= 0) continue;
+    const qtdRestaurada = item.quantidade * fatorProducao;
+    if (item.tipo === 'insumo') {
+      const idx = App.insumos.findIndex(i => i.id === item.itemId);
+      if (idx === -1) continue;
+      const antes = App.insumos[idx].estoqueAtual || 0;
+      App.insumos[idx].estoqueAtual = antes + qtdRestaurada;
+      registrarMovEstoque({
+        alvoTipo: 'insumo',
+        itemId: item.itemId,
+        tipo: 'estorno_producao_entrada',
+        quantidade: qtdRestaurada,
+        saldoApos: App.insumos[idx].estoqueAtual,
+        observacao: `Estorno de produção: ${produto.nome} (ref: ${estornoId})`,
+      });
+    } else {
+      const idx = App.produtos.findIndex(p => p.id === item.itemId);
+      if (idx === -1) continue;
+      const antes = App.produtos[idx].estoqueAtual || 0;
+      App.produtos[idx].estoqueAtual = antes + qtdRestaurada;
+      registrarMovEstoque({
+        alvoTipo: 'produto',
+        itemId: item.itemId,
+        tipo: 'estorno_producao_entrada',
+        quantidade: qtdRestaurada,
+        saldoApos: App.produtos[idx].estoqueAtual,
+        observacao: `Retorno de produto em estorno: ${produto.nome} (ref: ${estornoId})`,
+      });
+    }
+  }
+}
+
+document.getElementById('btnConfirmarEstorno').addEventListener('click', () => {
+  const prod = App.produtos.find(p => p.id === estornoProdutoId);
+  if (!prod) return;
+  const qtd = parseFloat(document.getElementById('inputEstornoQuantidade').value) || 0;
+  const unidade = document.getElementById('inputEstornoUnidade').value;
+  const motivo = document.getElementById('inputEstornoMotivo').value.trim();
+
+  if (qtd <= 0) { showToast('Informe uma quantidade válida.', 'error'); return; }
+
+  const unidadeBase = obterUnidadeProduto(prod);
+  const quantidadeBase = converterQuantidade(qtd, unidade, unidadeBase);
+  if (!Number.isFinite(quantidadeBase) || quantidadeBase <= 0) {
+    showToast(`Unidade incompatível. Use uma unidade compatível com ${unidadeBase}.`, 'error');
+    return;
+  }
+
+  const estoqueAtual = prod.estoqueAtual || 0;
+  if (estoqueAtual < quantidadeBase) {
+    showToast(`Estoque insuficiente para estornar. Atual: ${formatNum(estoqueAtual, 2)} ${unidadeBase}.`, 'error');
+    return;
+  }
+
+  const fatorProducao = calcularFatorProducao(prod, quantidadeBase);
+  if (!Number.isFinite(fatorProducao) || fatorProducao <= 0) {
+    showToast('Não foi possível calcular o estorno.', 'error');
+    return;
+  }
+
+  const estornoId = gerarId();
+  const idx = App.produtos.findIndex(p => p.id === estornoProdutoId);
+  if (idx === -1) return;
+
+  App.produtos[idx].estoqueAtual = estoqueAtual - quantidadeBase;
+  registrarMovEstoque({
+    alvoTipo: 'produto',
+    itemId: estornoProdutoId,
+    tipo: 'estorno_producao_saida',
+    quantidade: quantidadeBase,
+    saldoApos: App.produtos[idx].estoqueAtual,
+    observacao: motivo || `Estorno de produção de ${prod.nome}`,
+  });
+
+  reabastecerComponentesDeProducao(prod, fatorProducao, estornoId);
+
+  Storage.saveInsumos(App.insumos);
+  Storage.saveProdutos(App.produtos);
+  document.getElementById('modalEstornoProducao').classList.add('hidden');
+  estornoProdutoId = null;
+  renderEstoque();
+  renderProdutos();
+  atualizarSelectVendasReais();
+  atualizarBadgeEstoque();
+  showToast(`Estorno realizado para ${prod.nome}: -${formatNum(quantidadeBase, 2)} ${unidadeBase}`);
+});
+
+document.getElementById('btnCancelarEstorno').addEventListener('click', () => {
+  document.getElementById('modalEstornoProducao').classList.add('hidden');
+  estornoProdutoId = null;
+});
 
 function produtoTemCiclo(produtoId, composicao, produtoRascunho, visitados = new Set()) {
   if (visitados.has(produtoId)) return true;

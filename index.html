@@ -850,6 +850,35 @@
     </div>
   </div>
 
+  <div class="modal-overlay hidden" id="modalEstornoProducao">
+    <div class="modal">
+      <h3>Estornar Produção</h3>
+      <p id="modalEstornoNome" style="color:var(--acai);font-weight:600;margin-bottom:14px"></p>
+      <div class="form-group" style="text-align:left;margin-bottom:12px">
+        <label>Quantidade a estornar</label>
+        <input type="number" id="inputEstornoQuantidade" min="0.001" step="any" style="margin-top:6px" />
+      </div>
+      <div class="form-group" style="text-align:left;margin-bottom:12px">
+        <label>Unidade</label>
+        <select id="inputEstornoUnidade" style="margin-top:6px">
+          <option value="ml">ml</option>
+          <option value="l">l</option>
+          <option value="g">g</option>
+          <option value="kg">kg</option>
+          <option value="un">un</option>
+        </select>
+      </div>
+      <div class="form-group" style="text-align:left;margin-bottom:16px">
+        <label>Motivo</label>
+        <input type="text" id="inputEstornoMotivo" placeholder="Ex: Produzido errado" style="margin-top:6px" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btnCancelarEstorno">Cancelar</button>
+        <button class="btn-primary" id="btnConfirmarEstorno">Estornar</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast hidden" id="toast">
     <span id="toastMsg">Salvo com sucesso!</span>
   </div>
