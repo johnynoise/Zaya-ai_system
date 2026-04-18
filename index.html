@@ -333,6 +333,65 @@ h1,h2,h3,h4,h5 { font-family: 'Nunito', sans-serif; letter-spacing: -0.01em; }
 .stat-value { font-family: 'Nunito', sans-serif; font-size: 1.45rem; font-weight: 800; color: var(--text); line-height: 1.1; }
 .stat-sub { font-size: 0.74rem; color: var(--text-4); margin-top: 4px; }
 
+/* HISTÓRICO DE PREÇOS */
+.history-card { margin-top: 16px; }
+.history-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.history-tools select {
+  min-width: 240px;
+}
+.history-summary {
+  font-size: 0.84rem;
+  color: var(--text-3);
+  margin-bottom: 12px;
+}
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.history-entry {
+  display: grid;
+  grid-template-columns: 1.1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.history-entry-main { min-width: 0; }
+.history-entry-title {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.history-entry-sub {
+  font-size: 0.76rem;
+  color: var(--text-4);
+  line-height: 1.35;
+}
+.history-entry-value {
+  text-align: right;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.history-entry-value.up { color: var(--coral); }
+.history-entry-value.down { color: var(--green); }
+.history-entry-value.same { color: var(--acai); }
+.history-empty {
+  font-size: 0.84rem;
+  color: var(--text-4);
+  padding: 6px 0 2px;
+}
+
 /* FORMS */
 .form-grid { display: grid; gap: 14px 16px; }
 .fg-2 { grid-template-columns: 1fr 1fr; }
@@ -789,6 +848,147 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px;
   color: var(--text-2);
 }
 
+/* ============ PAINEL GERENCIAL ============ */
+.gerencial-header {
+  align-items: flex-end;
+}
+.gerencial-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.meta-input {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 230px;
+}
+.meta-input label {
+  text-transform: uppercase;
+  font-size: 0.69rem;
+  letter-spacing: 0.07em;
+}
+.meta-input input {
+  width: 100%;
+}
+.manager-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 0.95fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.manager-grid-bottom {
+  grid-template-columns: 1fr 1fr;
+}
+.kpi-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.progress-title {
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.1;
+}
+.progress-meta {
+  font-size: 0.82rem;
+  color: var(--text-4);
+  margin-top: 4px;
+}
+.progress-label {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--acai);
+  white-space: nowrap;
+}
+.progress-track {
+  width: 100%;
+  height: 12px;
+  background: #ece7df;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--acai), var(--green));
+  transition: width 0.28s ease;
+}
+.progress-fill.over {
+  background: linear-gradient(90deg, var(--green), var(--amber));
+}
+.progress-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.84rem;
+  color: var(--text-2);
+}
+.kpi-list,
+.manager-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.kpi-item,
+.manager-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.kpi-item-main,
+.manager-item-main {
+  min-width: 0;
+}
+.kpi-item-title,
+.manager-item-title {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.kpi-item-sub,
+.manager-item-sub {
+  font-size: 0.77rem;
+  color: var(--text-4);
+  line-height: 1.35;
+}
+.kpi-item-value,
+.manager-item-value {
+  font-family: 'Nunito', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--acai);
+  white-space: nowrap;
+}
+.manager-item-value.good { color: var(--green); }
+.manager-item-value.warn { color: var(--amber); }
+.manager-item-value.bad { color: var(--coral); }
+.manager-empty {
+  font-size: 0.85rem;
+  color: var(--text-4);
+  padding: 8px 0;
+}
+
 /* ============ ESTOQUE ============ */
 .mov-tip {
   background: var(--acai-dim);
@@ -814,6 +1014,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px;
   .calc-cards { grid-template-columns: repeat(3, 1fr); }
   .produtos-grid { grid-template-columns: repeat(2, 1fr); }
   .fg-4 { grid-template-columns: 1fr 1fr; }
+  .manager-grid, .manager-grid-bottom { grid-template-columns: 1fr; }
 }
 @media (max-width: 860px) {
   .sidebar { transform: translateX(-100%); }
@@ -830,6 +1031,9 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px;
   .calc-cards { grid-template-columns: repeat(2, 1fr); }
   .comp-add { grid-template-columns: 1fr; }
   .venda-preview { grid-template-columns: 1fr 1fr; }
+  .gerencial-header { align-items: flex-start; }
+  .gerencial-actions { width: 100%; }
+  .meta-input { min-width: 100%; flex: 1; }
 }
 @media (max-width: 540px) {
   .stats-row { grid-template-columns: 1fr; }
@@ -901,6 +1105,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px;
   <nav class="sidebar-nav">
     <span class="nav-label">Análise</span>
     <button class="nav-btn" data-page="dashboard"><span class="ni">⊞</span> Dashboard</button>
+    <button class="nav-btn" data-page="painel-gerencial"><span class="ni">▤</span> Painel Gerencial</button>
     <button class="nav-btn" data-page="calculos"><span class="ni">◈</span> Precificação</button>
     <button class="nav-btn" data-page="simulacao"><span class="ni">◒</span> Simulação</button>
     <button class="nav-btn" data-page="estoque">
@@ -930,6 +1135,9 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px;
         <div class="ph-left">
           <h1>Dashboard</h1>
           <p>Visão geral do negócio</p>
+        </div>
+        <div class="ph-right">
+          <button class="btn-sm" data-page="painel-gerencial">Abrir painel gerencial →</button>
         </div>
       </div>
 
@@ -997,6 +1205,75 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px;
             <button class="btn-sm" data-page="insumos">Ver todos →</button>
           </div>
           <div id="dashInsumos" class="dash-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PAINEL GERENCIAL ===== -->
+    <section class="page" id="page-painel-gerencial">
+      <div class="page-header gerencial-header">
+        <div class="ph-left">
+          <div class="step-badge">Painel Gerencial</div>
+          <h1>Metas e Indicadores</h1>
+          <p>Controle mensal de faturamento, ticket médio e produtos com melhor desempenho.</p>
+        </div>
+        <div class="gerencial-actions">
+          <div class="meta-input">
+            <label for="metaFaturamentoMensal">Meta de faturamento mensal</label>
+            <input type="number" id="metaFaturamentoMensal" min="0" step="0.01" placeholder="Ex: 12000" />
+          </div>
+          <button class="btn btn-primary" id="btnSalvarMetaGerencial">Salvar meta</button>
+        </div>
+      </div>
+
+      <div id="resumoGerencialAlerta"></div>
+
+      <div class="stats-row" id="statsGerencial"></div>
+
+      <div class="manager-grid">
+        <div class="card">
+          <div class="card-header">
+            <h3>Meta mensal de faturamento</h3>
+            <span class="tag tag-canal" id="gerencialMesRef">—</span>
+          </div>
+          <div class="kpi-progress">
+            <div class="progress-head">
+              <div>
+                <div class="progress-title" id="gerencialFaturamentoAtual">R$ 0,00</div>
+                <div class="progress-meta" id="gerencialMetaResumo">Defina uma meta para acompanhar o avanço.</div>
+              </div>
+              <div class="progress-label" id="gerencialProgressoLabel">0%</div>
+            </div>
+            <div class="progress-track" aria-hidden="true">
+              <div class="progress-fill" id="gerencialProgressFill" style="width:0%"></div>
+            </div>
+            <div class="progress-footer">
+              <span id="gerencialMetaRestante">Meta pendente</span>
+              <span id="gerencialMetaStatus">Aguardando configuração</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Resumo do mês</h3>
+          </div>
+          <div class="kpi-list" id="gerencialResumoList"></div>
+        </div>
+      </div>
+
+      <div class="manager-grid manager-grid-bottom">
+        <div class="card">
+          <div class="card-header">
+            <h3>Produtos em destaque</h3>
+          </div>
+          <div class="manager-list" id="gerencialProdutosList"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>Insights rápidos</h3>
+          </div>
+          <div class="manager-list" id="gerencialInsightsList"></div>
         </div>
       </div>
     </section>
@@ -1106,6 +1383,20 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px;
             </div>
           </form>
         </div>
+      </div>
+
+      <div class="card history-card">
+        <div class="card-header">
+          <h3>📈 Histórico de Preço dos Insumos</h3>
+          <div class="history-tools">
+            <select id="selectHistoricoInsumo">
+              <option value="">Selecione um insumo</option>
+            </select>
+            <button class="btn-sm" id="btnVerHistoricoInsumo" type="button">Ver histórico</button>
+          </div>
+        </div>
+        <div class="history-summary" id="historicoPrecoResumo">Selecione um insumo para ver a evolução do preço.</div>
+        <div class="history-list" id="historicoPrecoLista"></div>
       </div>
 
       <div class="card">
@@ -1739,14 +2030,17 @@ const Storage = {
   saveVendas(d)     { localStorage.setItem('ap2_vendas', JSON.stringify(d)); },
   getMovEstoque()   { return JSON.parse(localStorage.getItem('ap2_mov') || '[]'); },
   saveMovEstoque(d) { localStorage.setItem('ap2_mov', JSON.stringify(d)); },
+  getMetaMensal()   { return parseFloat(localStorage.getItem('ap2_meta_faturamento_mensal') || '0'); },
+  saveMetaMensal(v) { localStorage.setItem('ap2_meta_faturamento_mensal', String(v || 0)); },
   clearAll() {
-    ['ap2_insumos','ap2_produtos','ap2_vendas','ap2_mov'].forEach(k => localStorage.removeItem(k));
+    ['ap2_insumos','ap2_produtos','ap2_vendas','ap2_mov','ap2_meta_faturamento_mensal'].forEach(k => localStorage.removeItem(k));
   }
 };
 
 const App = {
   insumos: [], produtos: [], vendas: [], movEstoque: [],
   composicaoTemp: [], paginaAtual: 'dashboard', filtroEstoque: 'todos',
+  metaFaturamentoMensal: 0,
 };
 
 function gerarId() { return '_'+Math.random().toString(36).substr(2,9)+Date.now().toString(36); }
@@ -1756,6 +2050,48 @@ function fDT(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+function formatMesReferencia(data = new Date()) {
+  const texto = data.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+function vendasDoMes(dataBase = new Date()) {
+  return App.vendas.filter(v => {
+    const data = new Date(v.data);
+    return data.getMonth() === dataBase.getMonth() && data.getFullYear() === dataBase.getFullYear();
+  });
+}
+function agregadorGerencial(vendas) {
+  const mapa = new Map();
+  vendas.forEach(venda => {
+    const produtoId = venda.produtoId || venda.idProduto || venda.produtoNome || 'desconhecido';
+    const produtoNome = venda.produtoNome || 'Produto sem nome';
+    const quantidade = Number(venda.quantidade) || 0;
+    const faturamento = Number(venda.totalFinal) || 0;
+    const lucro = Number(venda.lucro) || 0;
+    const atual = mapa.get(produtoId) || { produtoId, produtoNome, quantidade: 0, faturamento: 0, lucro: 0, vendas: 0 };
+    atual.produtoNome = produtoNome;
+    atual.quantidade += quantidade;
+    atual.faturamento += faturamento;
+    atual.lucro += lucro;
+    atual.vendas += 1;
+    mapa.set(produtoId, atual);
+  });
+  return [...mapa.values()];
+}
+function obterResumoGerencial(dataBase = new Date()) {
+  const vendasMes = vendasDoMes(dataBase);
+  const faturamento = vendasMes.reduce((acc, venda) => acc + (Number(venda.totalFinal) || 0), 0);
+  const lucro = vendasMes.reduce((acc, venda) => acc + (Number(venda.lucro) || 0), 0);
+  const quantidadeVendas = vendasMes.length;
+  const ticketMedio = quantidadeVendas > 0 ? faturamento / quantidadeVendas : 0;
+  const produtos = agregadorGerencial(vendasMes);
+  const produtoMaisVendido = [...produtos].sort((a, b) => b.quantidade - a.quantidade || b.faturamento - a.faturamento)[0] || null;
+  const produtoMaisLucrativo = [...produtos].sort((a, b) => b.lucro - a.lucro || b.faturamento - a.faturamento)[0] || null;
+  const meta = Math.max(0, Number(App.metaFaturamentoMensal) || 0);
+  const progresso = meta > 0 ? (faturamento / meta) * 100 : 0;
+  const restante = meta > 0 ? meta - faturamento : 0;
+  return { vendasMes, faturamento, lucro, quantidadeVendas, ticketMedio, produtos, produtoMaisVendido, produtoMaisLucrativo, meta, progresso, restante };
 }
 function bCat(cat) {
   const m = {fruta:'Fruta/Polpa',laticinios:'Laticínios',complemento:'Complemento',embalagem:'Embalagem',outros:'Outros'};
@@ -1847,6 +2183,106 @@ function getCustoUnitComp(item, vis=new Set()) {
 function labelComp(item) { return item.tipo==='produto'?'Produto':'Insumo'; }
 function tipoAlvoMov(m) { return m.alvoTipo||(m.produtoId?'produto':'insumo'); }
 
+function formatarVariacaoPercentual(antigo, novo) {
+  const anterior = Number(antigo);
+  const atual = Number(novo);
+  if (!Number.isFinite(anterior) || anterior === 0 || !Number.isFinite(atual)) return null;
+  return ((atual - anterior) / anterior) * 100;
+}
+
+function normalizarHistoricoPrecoInsumo(insumo, criarSeVazio = false) {
+  if (!insumo) return [];
+  if (!Array.isArray(insumo.historicoPrecos)) insumo.historicoPrecos = [];
+  if (criarSeVazio && insumo.historicoPrecos.length === 0 && Number.isFinite(Number(insumo.custoUnitario))) {
+    insumo.historicoPrecos.unshift({
+      id: gerarId(),
+      data: insumo.criadoEm || new Date().toISOString(),
+      origem: 'Preço atual migrado',
+      precoAnterior: null,
+      precoNovo: Number(insumo.custoUnitario) || 0,
+      qtdComprada: Number(insumo.qtdComprada) || 0,
+      unidade: insumo.unidade || '',
+    });
+  }
+  return insumo.historicoPrecos;
+}
+
+function registrarHistoricoPrecoInsumo(insumo, precoAnterior, precoNovo, origem = 'Atualização de custo') {
+  if (!insumo) return;
+  const historico = normalizarHistoricoPrecoInsumo(insumo);
+  const novoValor = Number(precoNovo) || 0;
+  const anterior = Number(precoAnterior);
+  if (Number.isFinite(anterior) && Math.abs(anterior - novoValor) < 0.000001) return;
+  historico.unshift({
+    id: gerarId(),
+    data: new Date().toISOString(),
+    origem,
+    precoAnterior: Number.isFinite(anterior) ? anterior : null,
+    precoNovo: novoValor,
+    variacaoPercentual: formatarVariacaoPercentual(anterior, novoValor),
+    qtdComprada: Number(insumo.qtdComprada) || 0,
+    unidade: insumo.unidade || '',
+  });
+}
+
+function atualizarSelectHistoricoInsumo() {
+  const sel = document.getElementById('selectHistoricoInsumo');
+  if (!sel) return;
+  const valorAtual = sel.value;
+  sel.innerHTML = '<option value="">Selecione um insumo</option>';
+  App.insumos.slice().sort((a, b) => a.nome.localeCompare(b.nome)).forEach(insumo => {
+    const option = document.createElement('option');
+    option.value = insumo.id;
+    option.textContent = `${insumo.nome} — ${fBRL(insumo.custoUnitario)}/${insumo.unidade}`;
+    sel.appendChild(option);
+  });
+  sel.value = valorAtual;
+}
+
+function renderHistoricoPrecoInsumo(id = null) {
+  const sel = document.getElementById('selectHistoricoInsumo');
+  const alvoId = id || (sel ? sel.value : '');
+  const resumo = document.getElementById('historicoPrecoResumo');
+  const lista = document.getElementById('historicoPrecoLista');
+  if (!resumo || !lista) return;
+
+  const insumo = App.insumos.find(i => i.id === alvoId);
+  if (!insumo) {
+    resumo.textContent = 'Selecione um insumo para ver a evolução do preço.';
+    lista.innerHTML = '<div class="history-empty">Nenhum insumo selecionado.</div>';
+    return;
+  }
+
+  const historico = normalizarHistoricoPrecoInsumo(insumo).slice();
+  if (!historico.length) {
+    resumo.textContent = `Ainda não há registros históricos para ${insumo.nome}.`;
+    lista.innerHTML = '<div class="history-empty">Sem registros de alteração de preço.</div>';
+    return;
+  }
+
+  resumo.textContent = `${insumo.nome} · ${historico.length} registro(s) · custo atual ${fBRL(insumo.custoUnitario)}/${insumo.unidade}`;
+  lista.innerHTML = historico.map((item, index) => {
+    const valorAnterior = Number(item.precoAnterior);
+    const valorNovo = Number(item.precoNovo);
+    const diferenca = Number.isFinite(valorAnterior) ? valorNovo - valorAnterior : 0;
+    const variacao = Number.isFinite(item.variacaoPercentual) ? item.variacaoPercentual : formatarVariacaoPercentual(valorAnterior, valorNovo);
+    const classe = !Number.isFinite(valorAnterior) ? 'same' : diferenca > 0 ? 'up' : diferenca < 0 ? 'down' : 'same';
+    const data = item.data ? formatDateTime(item.data) : '—';
+    const origem = item.origem || 'Atualização';
+    const textoVariacao = Number.isFinite(variacao) ? `${variacao >= 0 ? '+' : ''}${variacao.toFixed(1)}%` : '—';
+    const textoDelta = Number.isFinite(diferenca) ? `${diferenca >= 0 ? '+' : ''}${fBRL(Math.abs(diferenca))}` : '—';
+    return `
+      <div class="history-entry">
+        <div class="history-entry-main">
+          <div class="history-entry-title">${index === 0 ? 'Valor atual' : 'Mudança de preço'}</div>
+          <div class="history-entry-sub">${data} · ${origem}${item.qtdComprada ? ` · lote ${fNum(item.qtdComprada, 3)} ${item.unidade || insumo.unidade}` : ''}</div>
+        </div>
+        <div class="history-entry-value ${classe}">${Number.isFinite(valorAnterior) ? `${fBRL(valorAnterior)} → ` : ''}${fBRL(valorNovo)}<br><span style="font-size:.76rem;font-weight:700">${textoDelta}${Number.isFinite(variacao) ? ` · ${textoVariacao}` : ''}</span></div>
+      </div>
+    `;
+  }).join('');
+}
+
 let toastTimer = null;
 function showToast(msg, tipo='success') {
   const el=document.getElementById('toast');
@@ -1923,6 +2359,7 @@ function navegarPara(pag) {
   const stepMap = {'insumos':'sideStep1','produtos':'sideStep2','estoque':'sideStep3','vendas-reais':'sideStep4'};
   if(stepMap[pag]) document.getElementById(stepMap[pag]).classList.add('active');
   if(pag==='dashboard') renderDashboard();
+  if(pag==='painel-gerencial') renderPainelGerencial();
   if(pag==='insumos') renderInsumos();
   if(pag==='estoque') renderEstoque();
   if(pag==='calculos') renderCalculos();
@@ -1965,6 +2402,124 @@ function renderDashboard() {
   atualizarBadge();
 }
 
+function renderPainelGerencial() {
+  const agora = new Date();
+  const resumo = obterResumoGerencial(agora);
+  const progressoBruto = Number.isFinite(resumo.progresso) ? resumo.progresso : 0;
+  const progresso = Math.max(0, Math.min(progressoBruto, 100));
+  const meta = resumo.meta;
+  const metaConfigurada = meta > 0;
+  const metaStatus = !metaConfigurada
+    ? 'Aguardando configuração'
+    : progressoBruto >= 100
+      ? 'Meta atingida'
+      : 'Meta em andamento';
+  const restanteTexto = !metaConfigurada
+    ? 'Meta pendente'
+    : resumo.restante > 0
+      ? `${fBRL(resumo.restante)} para bater a meta`
+      : `${fBRL(Math.abs(resumo.restante))} acima da meta`;
+
+  const metaInput = document.getElementById('metaFaturamentoMensal');
+  if (metaInput && document.activeElement !== metaInput) metaInput.value = metaConfigurada ? meta : '';
+
+  const progressFill = document.getElementById('gerencialProgressFill');
+  if (progressFill) {
+    progressFill.style.width = `${progresso}%`;
+    progressFill.classList.toggle('over', progressoBruto > 100);
+  }
+
+  const mesRef = document.getElementById('gerencialMesRef');
+  if (mesRef) mesRef.textContent = formatMesReferencia(agora);
+
+  const faturamentoAtual = document.getElementById('gerencialFaturamentoAtual');
+  if (faturamentoAtual) faturamentoAtual.textContent = fBRL(resumo.faturamento);
+
+  const metaResumo = document.getElementById('gerencialMetaResumo');
+  if (metaResumo) metaResumo.textContent = metaConfigurada ? `Meta de ${fBRL(meta)} definida para o mês.` : 'Defina uma meta para acompanhar o avanço.';
+
+  const progressoLabel = document.getElementById('gerencialProgressoLabel');
+  if (progressoLabel) progressoLabel.textContent = metaConfigurada ? `${progressoBruto.toFixed(1)}%` : '0%';
+
+  const metaRestante = document.getElementById('gerencialMetaRestante');
+  if (metaRestante) metaRestante.textContent = restanteTexto;
+
+  const metaStatusEl = document.getElementById('gerencialMetaStatus');
+  if (metaStatusEl) metaStatusEl.textContent = metaStatus;
+
+  const alerta = document.getElementById('resumoGerencialAlerta');
+  if (alerta) {
+    if (!resumo.vendasMes.length) {
+      alerta.innerHTML = '<div class="alert-banner">📌 <strong>Sem vendas no mês:</strong> registre vendas para liberar os indicadores gerenciais.</div>';
+    } else {
+      alerta.innerHTML = '';
+    }
+  }
+
+  const stats = document.getElementById('statsGerencial');
+  if (stats) {
+    stats.innerHTML = `
+      <div class="stat-card" style="--accent:var(--acai-2)"><div class="stat-label">Faturamento Mensal</div><div class="stat-value" style="font-size:1.25rem">${fBRL(resumo.faturamento)}</div><div class="stat-sub">até agora neste mês</div></div>
+      <div class="stat-card" style="--accent:var(--green)"><div class="stat-label">Ticket Médio</div><div class="stat-value" style="font-size:1.25rem">${fBRL(resumo.ticketMedio)}</div><div class="stat-sub">por venda</div></div>
+      <div class="stat-card" style="--accent:var(--coral)"><div class="stat-label">Lucro Mensal</div><div class="stat-value" style="font-size:1.25rem;color:${resumo.lucro>=0?'var(--green)':'var(--coral)'}">${fBRL(resumo.lucro)}</div><div class="stat-sub">resultado acumulado</div></div>
+      <div class="stat-card" style="--accent:${metaConfigurada ? (progressoBruto >= 100 ? 'var(--green)' : 'var(--amber)') : '#3b82f6'}"><div class="stat-label">Meta Mensal</div><div class="stat-value" style="font-size:1.25rem;color:${metaConfigurada ? (progressoBruto >= 100 ? 'var(--green)' : 'inherit') : 'inherit'}">${metaConfigurada ? `${progressoBruto.toFixed(1)}%` : '—'}</div><div class="stat-sub">${metaConfigurada ? `${fBRL(meta)} meta configurada` : 'configure uma meta'}</div></div>
+    `;
+  }
+
+  const resumoList = document.getElementById('gerencialResumoList');
+  if (resumoList) {
+    resumoList.innerHTML = `
+      <div class="kpi-item"><div class="kpi-item-main"><div class="kpi-item-title">Vendas do mês</div><div class="kpi-item-sub">Total de pedidos concluídos no período</div></div><div class="kpi-item-value">${resumo.quantidadeVendas}</div></div>
+      <div class="kpi-item"><div class="kpi-item-main"><div class="kpi-item-title">Faturamento médio diário</div><div class="kpi-item-sub">Média simples considerando o mês atual</div></div><div class="kpi-item-value">${fBRL(resumo.faturamento / Math.max(1, agora.getDate()))}</div></div>
+      <div class="kpi-item"><div class="kpi-item-main"><div class="kpi-item-title">Lucro por venda</div><div class="kpi-item-sub">Lucro acumulado dividido por vendas do mês</div></div><div class="kpi-item-value">${fBRL(resumo.quantidadeVendas > 0 ? resumo.lucro / resumo.quantidadeVendas : 0)}</div></div>
+      <div class="kpi-item"><div class="kpi-item-main"><div class="kpi-item-title">Margem mensal</div><div class="kpi-item-sub">Lucro sobre faturamento</div></div><div class="kpi-item-value">${resumo.faturamento > 0 ? ((resumo.lucro / resumo.faturamento) * 100).toFixed(1) : '0.0'}%</div></div>
+    `;
+  }
+
+  const produtosList = document.getElementById('gerencialProdutosList');
+  if (produtosList) {
+    const topVendidos = [...resumo.produtos].sort((a, b) => b.quantidade - a.quantidade || b.faturamento - a.faturamento).slice(0, 5);
+    produtosList.innerHTML = topVendidos.length ? topVendidos.map(item => `
+      <div class="manager-item">
+        <div class="manager-item-main">
+          <div class="manager-item-title">${item.produtoNome}</div>
+          <div class="manager-item-sub">${item.vendas} venda(s) · ${fNum(item.quantidade, 0)} unidade(s)</div>
+        </div>
+        <div class="manager-item-value">${fBRL(item.faturamento)}</div>
+      </div>
+    `).join('') : '<div class="manager-empty">Nenhuma venda disponível para montar o ranking.</div>';
+  }
+
+  const insightsList = document.getElementById('gerencialInsightsList');
+  if (insightsList) {
+    const maisVendido = resumo.produtoMaisVendido;
+    const maisLucrativo = resumo.produtoMaisLucrativo;
+    insightsList.innerHTML = `
+      <div class="manager-item">
+        <div class="manager-item-main">
+          <div class="manager-item-title">Produto mais vendido</div>
+          <div class="manager-item-sub">Maior volume em unidades no mês atual</div>
+        </div>
+        <div class="manager-item-value ${maisVendido ? 'good' : ''}">${maisVendido ? `${maisVendido.produtoNome}<br><span style="font-size:.82rem;font-weight:700;color:var(--text-4)">${fNum(maisVendido.quantidade, 0)} un.</span>` : '—'}</div>
+      </div>
+      <div class="manager-item">
+        <div class="manager-item-main">
+          <div class="manager-item-title">Produto mais lucrativo</div>
+          <div class="manager-item-sub">Maior lucro acumulado nas vendas do mês</div>
+        </div>
+        <div class="manager-item-value ${maisLucrativo ? 'good' : ''}">${maisLucrativo ? `${maisLucrativo.produtoNome}<br><span style="font-size:.82rem;font-weight:700;color:var(--text-4)">${fBRL(maisLucrativo.lucro)}</span>` : '—'}</div>
+      </div>
+      <div class="manager-item">
+        <div class="manager-item-main">
+          <div class="manager-item-title">Meta pendente</div>
+          <div class="manager-item-sub">Saldo necessário para atingir a meta mensal</div>
+        </div>
+        <div class="manager-item-value ${metaConfigurada ? (resumo.restante > 0 ? 'warn' : 'good') : ''}">${metaConfigurada ? (resumo.restante > 0 ? fBRL(resumo.restante) : 'Meta batida') : 'Defina a meta'}</div>
+      </div>
+    `;
+  }
+}
+
 // ============ INSUMOS ============
 function renderInsumos(filtro='',cat='') {
   let lista=App.insumos;
@@ -1972,7 +2527,12 @@ function renderInsumos(filtro='',cat='') {
   if(cat) lista=lista.filter(i=>i.categoria===cat);
   document.getElementById('totalInsumos').textContent=App.insumos.length;
   const tbody=document.getElementById('tbodyInsumos');
-  if(!lista.length){tbody.innerHTML=`<tr class="empty-row"><td colspan="8">Nenhum insumo encontrado.</td></tr>`;return;}
+  if(!lista.length){
+    tbody.innerHTML=`<tr class="empty-row"><td colspan="8">Nenhum insumo encontrado.</td></tr>`;
+    atualizarSelectHistoricoInsumo();
+    renderHistoricoPrecoInsumo();
+    return;
+  }
   tbody.innerHTML=lista.map(ins=>{const st=stEstoque(ins);return`
     <tr>
       <td><strong style="color:var(--text)">${ins.nome}</strong></td>
@@ -1984,6 +2544,8 @@ function renderInsumos(filtro='',cat='') {
       <td style="color:var(--text-3);font-size:.81rem">${ins.fornecedor||'—'}</td>
       <td><div style="display:flex;gap:5px"><button class="btn-edit" onclick="editarInsumo('${ins.id}')">✎ Editar</button><button class="btn-sm" onclick="abrirAjusteEstoque('${ins.id}')">📦</button><button class="btn-del" onclick="excluirInsumo('${ins.id}')">✕</button></div></td>
     </tr>`;}).join('');
+  atualizarSelectHistoricoInsumo();
+  renderHistoricoPrecoInsumo();
 }
 
 function editarInsumo(id) {
@@ -2003,13 +2565,16 @@ function editarInsumo(id) {
   document.getElementById('formInsumoBody').classList.remove('hidden');
   document.getElementById('btnToggleFormInsumo').textContent='−';
   document.getElementById('formInsumoCard').scrollIntoView({behavior:'smooth',block:'start'});
+  const selHistorico = document.getElementById('selectHistoricoInsumo');
+  if (selHistorico) selHistorico.value = ins.id;
+  renderHistoricoPrecoInsumo(ins.id);
 }
 
 async function excluirInsumo(id) {
   const ins=App.insumos.find(i=>i.id===id); if(!ins) return;
   const ok=await confirmar('Excluir Insumo',`Excluir "${ins.nome}"?`); if(!ok) return;
   App.insumos=App.insumos.filter(i=>i.id!==id); Storage.saveInsumos(App.insumos);
-  renderInsumos(); atualizarSelectInsumos(); atualizarBadge();
+  renderInsumos(); atualizarSelectInsumos(); atualizarBadge(); atualizarSelectHistoricoInsumo(); renderHistoricoPrecoInsumo();
   showToast(`"${ins.nome}" excluído.`);
 }
 
@@ -2045,14 +2610,19 @@ document.getElementById('formInsumo').addEventListener('submit',function(e){
   if(id){
     const idx=App.insumos.findIndex(i=>i.id===id);
     if(idx!==-1){
+      const custoAnterior=Number(App.insumos[idx].custoUnitario)||0;
       const antes=App.insumos[idx].estoqueAtual||0;
       App.insumos[idx]={...App.insumos[idx],nome,categoria:cat,unidade:unid,qtdComprada:qtd,precoPago:preco,custoUnitario:cu,estoqueAtual:ea,estoqueMinimo:em,fornecedor:forn};
+      normalizarHistoricoPrecoInsumo(App.insumos[idx]);
+      registrarHistoricoPrecoInsumo(App.insumos[idx], custoAnterior, cu, 'Edição de insumo');
       if(antes!==ea) registrarMov({insumoId:id,tipo:ea>=antes?'ajuste_mais':'ajuste_menos',quantidade:Math.abs(ea-antes),saldoApos:ea,observacao:'Ajuste via edição'});
     }
     showToast(`"${nome}" atualizado!`);
   } else {
     const nid=gerarId();
-    App.insumos.push({id:nid,nome,categoria:cat,unidade:unid,qtdComprada:qtd,precoPago:preco,custoUnitario:cu,estoqueAtual:ea,estoqueMinimo:em,fornecedor:forn});
+    const novoInsumo={id:nid,nome,categoria:cat,unidade:unid,qtdComprada:qtd,precoPago:preco,custoUnitario:cu,estoqueAtual:ea,estoqueMinimo:em,fornecedor:forn,historicoPrecos:[]};
+    App.insumos.push(novoInsumo);
+    registrarHistoricoPrecoInsumo(novoInsumo, null, cu, 'Cadastro de insumo');
     if(ea>0) registrarMov({insumoId:nid,tipo:'entrada',quantidade:ea,custo:preco,saldoApos:ea,observacao:'Estoque inicial'});
     showToast(`"${nome}" cadastrado!`);
   }
@@ -2181,9 +2751,14 @@ document.getElementById('btnRegistrarMov').addEventListener('click',()=>{
   if(!qtd||qtd<=0){showToast('Informe uma quantidade válida.','error');return;}
   const idx=App.insumos.findIndex(i=>i.id===iid); if(idx===-1) return;
   const ins=App.insumos[idx]; let ne=ins.estoqueAtual||0;
+  const custoAnterior=Number(ins.custoUnitario)||0;
   if(tipo==='entrada'||tipo==='ajuste_mais') ne+=qtd; else ne=Math.max(0,ne-qtd);
   if(tipo==='entrada'&&custo&&custo>0&&qtd>0){App.insumos[idx].custoUnitario=custo/qtd;App.insumos[idx].precoPago=custo;App.insumos[idx].qtdComprada=qtd;}
   App.insumos[idx].estoqueAtual=ne;
+  if(tipo==='entrada'&&custo&&custo>0&&qtd>0){
+    normalizarHistoricoPrecoInsumo(App.insumos[idx]);
+    registrarHistoricoPrecoInsumo(App.insumos[idx], custoAnterior, App.insumos[idx].custoUnitario, 'Entrada de estoque');
+  }
   registrarMov({insumoId:iid,tipo,quantidade:qtd,custo,saldoApos:ne,observacao:obs});
   Storage.saveInsumos(App.insumos);
   ['movInsumo','movQuantidade','movCusto','movObservacao'].forEach(i=>{const el=document.getElementById(i);if(el) el.value='';});
@@ -2555,7 +3130,7 @@ document.getElementById('btnRegistrarVenda').addEventListener('click',async()=>{
   ['vendaRealProduto','vendaRealPreco','vendaRealObs'].forEach(id=>{document.getElementById(id).value='';});
   document.getElementById('vendaRealQtd').value=1; document.getElementById('vendaRealDesconto').value=0;
   document.getElementById('previewVenda').classList.add('hidden');
-  renderVendasReais(); if(App.paginaAtual==='dashboard') renderDashboard(); atualizarBadge();
+  renderVendasReais(); if(App.paginaAtual==='dashboard') renderDashboard(); if(App.paginaAtual==='painel-gerencial') renderPainelGerencial(); atualizarBadge();
   showToast(`Venda registrada! ${fBRL(tot)} | Lucro: ${fBRL(luc)}`);
 });
 document.getElementById('btnCancelarVendaReal').addEventListener('click',()=>{
@@ -2575,6 +3150,7 @@ function renderVendasReais() {
     <div class="stat-card" style="--accent:var(--coral)"><div class="stat-label">Custo Hoje</div><div class="stat-value" style="font-size:1.25rem">${fBRL(ct)}</div><div class="stat-sub">custo dos produtos</div></div>
     <div class="stat-card" style="--accent:#3b82f6"><div class="stat-label">Lucro Hoje</div><div class="stat-value" style="font-size:1.25rem;color:${luc>=0?'var(--green)':'var(--coral)'}">${fBRL(luc)}</div><div class="stat-sub">${mg.toFixed(1)}% de margem</div></div>
   `;
+  if(App.paginaAtual==='painel-gerencial') renderPainelGerencial();
   renderHistVendas();
 }
 
@@ -2602,7 +3178,7 @@ function renderHistVendas() {
 async function excluirVenda(id) {
   const ok=await confirmar('Excluir Venda','O estoque NÃO será restaurado. Confirmar?'); if(!ok) return;
   App.vendas=App.vendas.filter(v=>v.id!==id); Storage.saveVendas(App.vendas);
-  renderHistVendas(); renderVendasReais(); showToast('Venda excluída.');
+  renderHistVendas(); renderVendasReais(); if(App.paginaAtual==='dashboard') renderDashboard(); if(App.paginaAtual==='painel-gerencial') renderPainelGerencial(); showToast('Venda excluída.');
 }
 
 // ============ SIMULAÇÃO ============
@@ -2682,9 +3258,15 @@ function init() {
   App.produtos=Storage.getProdutos().map(p=>({estoqueAtual:0,estoqueMinimo:0,...p,estoqueAtual:Number.isFinite(parseFloat(p.estoqueAtual))?parseFloat(p.estoqueAtual):0,estoqueMinimo:Number.isFinite(parseFloat(p.estoqueMinimo))?parseFloat(p.estoqueMinimo):0}));
   App.vendas=Storage.getVendas();
   App.movEstoque=Storage.getMovEstoque();
+  App.metaFaturamentoMensal=Storage.getMetaMensal();
+  App.insumos=App.insumos.map(ins=>({historicoPrecos:[], ...ins, historicoPrecos:Array.isArray(ins.historicoPrecos)?ins.historicoPrecos:[]}));
+  App.insumos.forEach(ins=>normalizarHistoricoPrecoInsumo(ins, true));
   if(!App.insumos.length&&!App.produtos.length){const m=carregarMock();App.insumos=m.insumos;App.produtos=m.produtos;}
+  App.insumos=App.insumos.map(ins=>({historicoPrecos:[], ...ins, historicoPrecos:Array.isArray(ins.historicoPrecos)?ins.historicoPrecos:[]}));
+  App.insumos.forEach(ins=>normalizarHistoricoPrecoInsumo(ins, true));
   Storage.saveProdutos(App.produtos);
-  renderDashboard(); renderInsumos(); renderProdutos(); atualizarSelectInsumos(); atualizarSelectCalculo(); atualizarSelectVendas(); atualizarBadge();
+  Storage.saveInsumos(App.insumos);
+  renderDashboard(); renderPainelGerencial(); renderInsumos(); renderProdutos(); atualizarSelectInsumos(); atualizarSelectCalculo(); atualizarSelectVendas(); atualizarBadge();
 
   // Navegação - todos [data-page]
   document.querySelectorAll('[data-page]').forEach(btn=>{
@@ -2729,6 +3311,8 @@ function init() {
   document.getElementById('buscaInsumo').addEventListener('input',function(){renderInsumos(this.value,document.getElementById('filtroCategoria').value);});
   document.getElementById('filtroCategoria').addEventListener('change',function(){renderInsumos(document.getElementById('buscaInsumo').value,this.value);});
   document.getElementById('buscaProduto').addEventListener('input',function(){renderProdutos(this.value);});
+  document.getElementById('selectHistoricoInsumo').addEventListener('change',function(){renderHistoricoPrecoInsumo(this.value);});
+  document.getElementById('btnVerHistoricoInsumo').addEventListener('click',()=>renderHistoricoPrecoInsumo());
 
   // Composição hint
   document.getElementById('selectInsumoComposicao').addEventListener('change',atualizarHintUnidade);
@@ -2736,6 +3320,17 @@ function init() {
   // Cálculos
   document.getElementById('selectProdutoCalculo').addEventListener('change',function(){if(this.value) renderDetalheCalculo(this.value); else document.getElementById('painelCalculo').classList.add('hidden');});
   document.getElementById('simMargem').addEventListener('input',function(){const pid=document.getElementById('selectProdutoCalculo').value;const p=App.produtos.find(x=>x.id===pid);if(!p) return;atualizarSimulador(p,calcProd(p).custoTotal);});
+
+  // Painel gerencial
+  document.getElementById('btnSalvarMetaGerencial').addEventListener('click',()=>{
+    const meta=parseFloat(document.getElementById('metaFaturamentoMensal').value);
+    if(!Number.isFinite(meta)||meta<0){showToast('Informe uma meta válida.','error');return;}
+    App.metaFaturamentoMensal=meta;
+    Storage.saveMetaMensal(meta);
+    renderPainelGerencial();
+    showToast('Meta mensal salva.');
+  });
+  document.getElementById('metaFaturamentoMensal').addEventListener('change',()=>renderPainelGerencial());
 
   // Simulação
   document.getElementById('selectProdutoVenda').addEventListener('change',atualizarSimVenda);
@@ -2748,7 +3343,7 @@ function init() {
   document.getElementById('filtroVendasProduto').addEventListener('change',renderHistVendas);
 
   // Limpar historicos
-  document.getElementById('btnLimparHistVendas').addEventListener('click',async()=>{const ok=await confirmar('Limpar Histórico','Limpar todas as vendas? Estoques não serão restaurados.');if(!ok) return;App.vendas=[];Storage.saveVendas(App.vendas);renderVendasReais();showToast('Histórico limpo.');});
+  document.getElementById('btnLimparHistVendas').addEventListener('click',async()=>{const ok=await confirmar('Limpar Histórico','Limpar todas as vendas? Estoques não serão restaurados.');if(!ok) return;App.vendas=[];Storage.saveVendas(App.vendas);renderVendasReais();if(App.paginaAtual==='dashboard') renderDashboard();if(App.paginaAtual==='painel-gerencial') renderPainelGerencial();showToast('Histórico limpo.');});
   document.getElementById('btnLimparHistMov').addEventListener('click',async()=>{const ok=await confirmar('Limpar Histórico','Limpar todo o histórico de movimentações?');if(!ok) return;App.movEstoque=[];Storage.saveMovEstoque(App.movEstoque);renderHistMov();showToast('Histórico limpo.');});
 
   // Exportar e limpar tudo
@@ -2756,8 +3351,8 @@ function init() {
   document.getElementById('btnLimparTudo').addEventListener('click',async()=>{
     const ok=await confirmar('Apagar Todos os Dados','Isso apagará TUDO: insumos, produtos, vendas e movimentações. Ação irreversível!');
     if(!ok) return;
-    Storage.clearAll(); App.insumos=[];App.produtos=[];App.vendas=[];App.movEstoque=[];
-    renderDashboard();renderInsumos();renderProdutos();atualizarSelectInsumos();atualizarSelectCalculo();atualizarSelectVendas();
+    Storage.clearAll(); App.insumos=[];App.produtos=[];App.vendas=[];App.movEstoque=[];App.metaFaturamentoMensal=0;
+    renderDashboard();renderPainelGerencial();renderInsumos();renderProdutos();atualizarSelectInsumos();atualizarSelectCalculo();atualizarSelectVendas();
     document.getElementById('painelCalculo').classList.add('hidden');atualizarBadge();
     showToast('Todos os dados apagados.');
   });
