@@ -1,128 +1,1042 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AçaíPrice — Sistema de Precificação</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AçaíPrice — Precificação</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Nunito+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f6f3;
+  --surface: #ffffff;
+  --surface-2: #f2f0ec;
+  --border: #e4e0d9;
+  --border-2: #ccc8bf;
+  --acai: #5a3e8a;
+  --acai-2: #7155a8;
+  --acai-dim: #f0ecf9;
+  --acai-mid: #d4c9f0;
+  --coral: #c95f3f;
+  --coral-dim: #fdf0ec;
+  --green: #3a7d5a;
+  --green-dim: #edf7f1;
+  --amber: #b5800d;
+  --amber-dim: #fdf6e3;
+  --text: #1a1714;
+  --text-2: #4a453e;
+  --text-3: #7a7168;
+  --text-4: #a09890;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --shadow: 0 1px 3px rgba(20,15,5,0.07), 0 1px 2px rgba(20,15,5,0.04);
+  --shadow-md: 0 4px 12px rgba(20,15,5,0.10);
+  --sidebar: 220px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; scroll-behavior: smooth; }
+
+body {
+  font-family: 'Nunito Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1,h2,h3,h4,h5 { font-family: 'Nunito', sans-serif; letter-spacing: -0.01em; }
+
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar);
+  min-height: 100vh;
+  background: var(--acai);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  transition: transform 0.22s ease;
+  padding: 0;
+}
+
+.sidebar-brand {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.brand-icon { font-size: 22px; margin-bottom: 4px; display: block; }
+.brand-name { font-family: 'Nunito', sans-serif; font-size: 1.05rem; font-weight: 800; color: #fff; display: block; }
+.brand-sub { font-size: 0.72rem; color: rgba(255,255,255,0.6); display: block; margin-top: 1px; }
+
+/* Wizard Steps indicator */
+.sidebar-steps {
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.steps-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 4px;
+  border-radius: var(--radius-xs);
+  margin-bottom: 2px;
+  cursor: pointer;
+  transition: background 0.14s;
+  position: relative;
+}
+.step-item:hover { background: rgba(255,255,255,0.07); }
+.step-item.active { background: rgba(255,255,255,0.14); }
+.step-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 0.68rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7);
+  flex-shrink: 0;
+  font-family: 'Nunito', sans-serif;
+  transition: all 0.2s;
+}
+.step-item.done .step-num { background: rgba(255,255,255,0.9); color: var(--acai); }
+.step-item.active .step-num { background: #fff; color: var(--acai); box-shadow: 0 0 0 3px rgba(255,255,255,0.25); }
+.step-text { flex: 1; }
+.step-name { font-size: 0.82rem; font-weight: 600; color: rgba(255,255,255,0.9); display: block; }
+.step-item.active .step-name { color: #fff; }
+.step-desc { font-size: 0.68rem; color: rgba(255,255,255,0.5); display: block; margin-top: 1px; }
+.step-connector {
+  position: absolute;
+  left: 25px;
+  top: 100%;
+  width: 2px;
+  height: 4px;
+  background: rgba(255,255,255,0.15);
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.nav-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.5);
+  padding: 10px 4px 8px;
+  display: block;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 8px;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: rgba(255,255,255,0.75);
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.14s;
+  text-align: left;
+  margin-bottom: 1px;
+}
+.nav-btn .ni { font-size: 0.82rem; width: 18px; text-align: center; opacity: 0.65; }
+.nav-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.nav-btn.active { background: #fff; color: var(--acai); font-weight: 700; }
+.nav-btn.active .ni { opacity: 1; }
+
+.badge-alert {
+  margin-left: auto;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 999px;
+  min-width: 16px;
+  text-align: center;
+  font-family: 'Nunito', sans-serif;
+}
+
+.sidebar-footer {
+  padding: 12px 14px;
+}
+.sidebar-footer button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: var(--radius-xs);
+  color: rgba(255,255,255,0.6);
+  font-size: 0.78rem;
+  font-family: 'Nunito Sans', sans-serif;
+  cursor: pointer;
+  margin-bottom: 6px;
+  transition: all 0.14s;
+  font-weight: 500;
+}
+.sidebar-footer button:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.3); }
+.sidebar-footer .btn-clear { border-color: rgba(220,80,60,0.3); color: rgba(255,180,160,0.8); }
+.sidebar-footer .btn-clear:hover { background: rgba(220,80,60,0.12); color: #ffb0a0; border-color: rgba(220,80,60,0.5); }
+
+/* MAIN */
+.main-content {
+  margin-left: var(--sidebar);
+  flex: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  backdrop-filter: blur(6px);
+}
+.topbar-title { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1rem; color: var(--acai); }
+.menu-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: var(--radius-xs);
+}
+
+.page-container {
+  flex: 1;
+  padding: 32px 40px;
+  max-width: 1080px;
+  width: 100%;
+  align-self: flex-start;
+  margin: 0 auto;
+}
+
+/* PAGES */
+.page { display: none; animation: fadeUp 0.18s ease; }
+.page.active { display: block; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* PAGE HEADER */
+.page-header {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.ph-left h1 { font-size: 1.5rem; font-weight: 800; color: var(--text); }
+.ph-left p { font-size: 0.88rem; color: var(--text-3); margin-top: 4px; }
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--acai-dim);
+  color: var(--acai);
+  border: 1px solid var(--acai-mid);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: 'Nunito', sans-serif;
+  margin-bottom: 8px;
+  display: flex;
+  width: fit-content;
+}
+
+/* CARDS */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+.card:hover { border-color: var(--border-2); }
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.card-header h3 {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-3);
+}
+
+/* STATS */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.stat-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--accent, var(--acai));
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+.stat-label { font-size: 0.67rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); margin-bottom: 6px; font-weight: 600; }
+.stat-value { font-family: 'Nunito', sans-serif; font-size: 1.45rem; font-weight: 800; color: var(--text); line-height: 1.1; }
+.stat-sub { font-size: 0.74rem; color: var(--text-4); margin-top: 4px; }
+
+/* FORMS */
+.form-grid { display: grid; gap: 14px 16px; }
+.fg-2 { grid-template-columns: 1fr 1fr; }
+.fg-3 { grid-template-columns: 1fr 1fr 1fr; }
+.fg-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+.fg-auto { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.span-2 { grid-column: span 2; }
+.span-3 { grid-column: span 3; }
+.span-4 { grid-column: span 4; }
+
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+label {
+  font-size: 0.71rem;
+  font-weight: 700;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.field-hint { font-size: 0.72rem; color: var(--text-4); margin-top: 2px; }
+
+input[type="text"],
+input[type="number"],
+select, textarea {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 10px 12px;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 0.92rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+}
+input:focus, select:focus {
+  border-color: var(--acai-2);
+  box-shadow: 0 0 0 3px rgba(90,62,138,0.1);
+}
+input::placeholder { color: var(--text-4); }
+.readonly-input {
+  background: var(--surface-2) !important;
+  color: var(--green) !important;
+  font-weight: 700;
+  cursor: default;
+  border-color: var(--border) !important;
+}
+
+.form-section {
+  margin: 18px 0 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.form-section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.form-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  margin-top: 18px;
+}
+
+/* BUTTONS */
+.btn {
+  border-radius: var(--radius-sm);
+  padding: 10px 18px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 0.86rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-primary { background: var(--acai); color: #fff; }
+.btn-primary:hover { background: #4a3070; transform: translateY(-1px); box-shadow: 0 3px 10px rgba(90,62,138,0.3); }
+.btn-secondary { background: var(--surface); color: var(--text-2); border: 1.5px solid var(--border); }
+.btn-secondary:hover { background: var(--surface-2); border-color: var(--border-2); }
+.btn-danger { background: #dc2626; color: #fff; }
+.btn-danger:hover { background: #b91c1c; }
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.76rem;
+  border-radius: var(--radius-xs);
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text-3);
+  font-family: 'Nunito', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.14s;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.btn-sm:hover { color: var(--text); border-color: var(--border-2); background: #fff; }
+.btn-sm.active { background: var(--acai); color: #fff; border-color: var(--acai); }
+.btn-edit { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: var(--radius-xs); padding: 5px 9px; font-size: 0.77rem; cursor: pointer; transition: all 0.14s; font-family: 'Nunito', sans-serif; font-weight: 600; }
+.btn-edit:hover { background: #dbeafe; }
+.btn-del { background: #fff5f5; color: #dc2626; border: 1px solid #fecaca; border-radius: var(--radius-xs); padding: 5px 9px; font-size: 0.77rem; cursor: pointer; transition: all 0.14s; font-family: 'Nunito', sans-serif; font-weight: 600; }
+.btn-del:hover { background: #fee2e2; }
+.btn-outline-danger { background: transparent; border: 1px solid #fca5a5; color: #dc2626; border-radius: var(--radius-xs); padding: 5px 10px; font-size: 0.76rem; cursor: pointer; transition: all 0.14s; font-family: 'Nunito', sans-serif; font-weight: 600; }
+.btn-outline-danger:hover { background: #fff5f5; }
+
+/* TABLES */
+.table-wrap { overflow-x: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+thead tr { background: var(--surface-2); border-bottom: 1px solid var(--border); }
+th {
+  padding: 10px 14px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-3);
+  white-space: nowrap;
+  text-align: left;
+}
+td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f0ede8;
+  color: var(--text-2);
+  vertical-align: middle;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: #faf8f5; }
+.empty-row td { text-align: center; color: var(--text-4); padding: 30px; font-size: 0.88rem; }
+
+/* TAGS */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.tag-fruta { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+.tag-laticinios { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+.tag-complemento { background: #fff7ed; color: #92400e; border: 1px solid #fed7aa; }
+.tag-embalagem { background: #f5f3ff; color: #5b21b6; border: 1px solid #ddd6fe; }
+.tag-outros { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+.tag-produto { background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; }
+.tag-ok { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+.tag-alerta { background: #fffbeb; color: #78350f; border: 1px solid #fde68a; }
+.tag-zerado { background: #fef2f2; color: #7f1d1d; border: 1px solid #fecaca; }
+.tag-canal { background: #f0f9ff; color: #0c4a6e; border: 1px solid #bae6fd; }
+.tag-green { background: #ecfdf5; color: #065f46; }
+.tag-red { background: #fef2f2; color: #7f1d1d; }
+.tag-blue { background: #eff6ff; color: #1e40af; }
+.tag-orange { background: #fff7ed; color: #92400e; }
+.tag-coral { background: #fef2f2; color: #9f1239; }
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.status-ok { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+.status-alerta { background: #fffbeb; color: #78350f; border: 1px solid #fde68a; }
+.status-zerado { background: #fef2f2; color: #7f1d1d; border: 1px solid #fecaca; }
+
+/* SEARCH */
+.search-box { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; }
+.search-box input { border: none; background: none; padding: 0; font-size: 0.86rem; color: var(--text); width: 170px; box-shadow: none !important; }
+.search-icon { color: var(--text-4); font-size: 0.9rem; }
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 12px 18px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+  z-index: 2000;
+  border-left: 4px solid var(--green);
+  color: var(--green);
+  max-width: 380px;
+  animation: slideUp 0.22s ease;
+}
+.toast.hidden { display: none; }
+.toast.error { border-color: var(--coral); color: var(--coral); }
+.toast.warning { border-color: var(--amber); color: var(--amber); }
+@keyframes slideUp { from { transform: translateY(8px); opacity: 0; } to { opacity: 1; } }
+
+/* MODAL */
+.modal-overlay { position: fixed; inset: 0; background: rgba(10,8,5,0.45); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+.modal-overlay.hidden { display: none; }
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 28px;
+  max-width: 400px;
+  width: 92%;
+  box-shadow: var(--shadow-md);
+  animation: popIn 0.18s ease;
+}
+@keyframes popIn { from { transform: scale(0.97) translateY(6px); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.modal h3 { font-size: 1rem; margin-bottom: 8px; }
+.modal p { color: var(--text-3); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* EMPTY STATE */
+.empty-state { text-align: center; padding: 50px 20px; color: var(--text-3); }
+.empty-state .ei { font-size: 2.4rem; margin-bottom: 14px; opacity: 0.3; }
+.empty-state p { margin-bottom: 18px; font-size: 0.9rem; }
+.hidden { display: none !important; }
+
+/* ============ DASHBOARD ============ */
+.alert-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-left: 4px solid #f59e0b;
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  color: #78350f;
+  margin-bottom: 16px;
+}
+.alert-chip {
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  color: #78350f;
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+.dash-list { display: flex; flex-direction: column; gap: 6px; }
+.dash-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 13px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  font-size: 0.87rem;
+  border: 1px solid transparent;
+  transition: all 0.14s;
+  cursor: pointer;
+}
+.dash-item:hover { background: #fff; border-color: var(--border); box-shadow: var(--shadow); }
+.di-name { color: var(--text-2); font-weight: 500; }
+.di-name small { color: var(--text-4); font-size: .78em; margin-left: 4px; }
+.di-val { color: var(--acai); font-weight: 700; font-size: 0.9rem; }
+.empty-dash { color: var(--text-4); font-size: .84rem; padding: 8px 0; }
+
+/* ============ FLOW GUIDE ============ */
+.flow-guide {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.flow-step {
+  flex: 1;
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.14s;
+  position: relative;
+}
+.flow-step:last-child { border-right: none; }
+.flow-step:hover { background: var(--surface-2); }
+.flow-step.done { background: var(--green-dim); }
+.flow-step.active { background: var(--acai-dim); }
+.flow-step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-3);
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.flow-step.done .flow-step-num { background: var(--green); color: #fff; }
+.flow-step.active .flow-step-num { background: var(--acai); color: #fff; box-shadow: 0 0 0 3px var(--acai-dim); }
+.flow-step-body { min-width: 0; }
+.flow-step-title { font-family: 'Nunito', sans-serif; font-size: 0.84rem; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.flow-step.active .flow-step-title { color: var(--acai-2); }
+.flow-step-sub { font-size: 0.72rem; color: var(--text-4); line-height: 1.4; }
+.flow-arrow { position: absolute; right: -9px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: var(--text-4); z-index: 1; }
+
+/* ============ PRODUTOS GRID ============ */
+.produtos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.prod-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  transition: all 0.15s;
+}
+.prod-card:hover { border-color: var(--acai-mid); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.prod-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.prod-name { font-family: 'Nunito', sans-serif; font-size: 0.97rem; font-weight: 800; color: var(--text); }
+.prod-vol { background: var(--surface-2); border: 1px solid var(--border); color: var(--text-3); border-radius: 999px; padding: 2px 8px; font-size: 0.68rem; font-weight: 700; font-family: 'Nunito', sans-serif; }
+.prod-desc { font-size: 0.78rem; color: var(--text-3); margin-bottom: 13px; min-height: 14px; }
+.prod-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 13px; }
+.ps-item { background: var(--surface-2); border-radius: var(--radius-xs); padding: 8px 10px; text-align: center; }
+.ps-label { font-size: 0.6rem; color: var(--text-4); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; font-weight: 600; }
+.ps-val { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.9rem; }
+.ps-custo { color: var(--coral); }
+.ps-preco { color: var(--green); }
+.ps-margem { color: var(--acai); }
+.prod-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+.prod-actions button { flex: 1; min-width: 60px; text-align: center; justify-content: center; }
+
+/* ============ CÁLCULOS ============ */
+.calc-cards { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 18px; }
+.calc-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 10px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  border-bottom: 3px solid var(--accent, var(--acai));
+  transition: all 0.14s;
+}
+.calc-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.cc-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); margin-bottom: 8px; font-weight: 600; }
+.cc-val { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1rem; color: var(--text); }
+.cc-preco .cc-val { color: var(--green); font-size: 1.1rem; }
+.cc-lucro .cc-val { color: #2563eb; }
+
+.sim-body { display: flex; flex-direction: column; gap: 14px; }
+.sim-label { font-size: 0.88rem; color: var(--text-2); }
+.sim-label strong { color: var(--acai); font-family: 'Nunito', sans-serif; }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 5px; background: #e5e1d8; border-radius: 999px; outline: none; border: none; padding: 0; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--acai); cursor: pointer; border: 2px solid #fff; box-shadow: 0 0 0 3px rgba(90,62,138,0.18); }
+.sim-result { font-size: 0.88rem; color: var(--text-2); padding: 12px 14px; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.sim-result span { font-weight: 700; color: var(--green); font-family: 'Nunito', sans-serif; }
+.pct-bar { display: flex; align-items: center; gap: 8px; }
+.pct-track { flex: 1; height: 4px; background: #ede9e3; border-radius: 999px; overflow: hidden; }
+.pct-fill { height: 100%; background: var(--acai); border-radius: 999px; transition: width 0.3s ease; }
+.pct-lbl { font-size: 0.73rem; color: var(--acai); font-weight: 700; min-width: 38px; text-align: right; font-family: 'Nunito', sans-serif; }
+
+/* ============ COMPOSIÇÃO ============ */
+.comp-box {
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 18px;
+}
+.comp-box h4 {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  margin-bottom: 13px;
+  font-weight: 700;
+}
+.comp-add { display: grid; grid-template-columns: 1fr 100px 74px 40px auto; gap: 10px; align-items: center; margin-bottom: 13px; }
+.comp-hint { font-size: 0.8rem; color: var(--text-3); text-align: center; }
+.comp-total {
+  text-align: right;
+  font-size: 0.86rem;
+  color: var(--text-3);
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+.comp-total strong { font-size: 0.95rem; font-family: 'Nunito', sans-serif; }
+
+/* ============ VENDAS REAIS ============ */
+.venda-preview {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin: 14px 0 0;
+}
+.vp-item { text-align: center; }
+.vp-label { display: block; font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-4); margin-bottom: 4px; font-weight: 600; }
+.vp-val { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1.1rem; color: var(--text); }
+.vp-custo { color: var(--coral) !important; }
+.vp-margem { color: var(--acai) !important; }
+.vp-warn {
+  grid-column: 1 / -1;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-xs);
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: #78350f;
+}
+.totais-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+  font-size: 0.86rem;
+  color: var(--text-2);
+}
+
+/* ============ ESTOQUE ============ */
+.mov-tip {
+  background: var(--acai-dim);
+  border: 1px solid var(--acai-mid);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  font-size: 0.85rem;
+  color: var(--acai-2);
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+/* PRINT */
+@media print {
+  .sidebar, .topbar, .card.form-card, .btn, .modal-overlay, .toast { display: none !important; }
+  body { background: #fff; }
+  .main-content { margin-left: 0; padding: 20px; }
+  .page { display: block !important; }
+}
+
+/* RESPONSIVE */
+@media (max-width: 1100px) {
+  .calc-cards { grid-template-columns: repeat(3, 1fr); }
+  .produtos-grid { grid-template-columns: repeat(2, 1fr); }
+  .fg-4 { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 860px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); box-shadow: var(--shadow-md); }
+  .topbar { display: flex; }
+  .main-content { margin-left: 0; }
+  .page-container { padding: 18px; }
+  .stats-row, .dash-grid { grid-template-columns: 1fr 1fr; }
+  .fg-3, .fg-4, .fg-auto { grid-template-columns: 1fr 1fr; }
+  .fg-2 { grid-template-columns: 1fr 1fr; }
+  .span-2, .span-3, .span-4 { grid-column: span 2; }
+  .flow-guide { flex-direction: column; }
+  .flow-step { border-right: none; border-bottom: 1px solid var(--border); }
+  .calc-cards { grid-template-columns: repeat(2, 1fr); }
+  .comp-add { grid-template-columns: 1fr; }
+  .venda-preview { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 540px) {
+  .stats-row { grid-template-columns: 1fr; }
+  .fg-2, .fg-3, .fg-4, .fg-auto { grid-template-columns: 1fr; }
+  .span-2, .span-3, .span-4 { grid-column: span 1; }
+  .produtos-grid { grid-template-columns: 1fr; }
+  .calc-cards { grid-template-columns: 1fr 1fr; }
+  .venda-preview { grid-template-columns: 1fr 1fr; }
+}
+
+/* ============ SIMULAÇÃO ============ */
+.sim-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+
+/* Collapsible form */
+.form-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  margin-bottom: 0;
+}
+.form-card-header h3 { margin-bottom: 0; }
+.form-card-body { margin-top: 18px; }
+.form-card-body.hidden { display: none; }
+.toggle-form-btn { font-size: 1.2rem; line-height: 1; color: var(--text-3); background: none; border: none; cursor: pointer; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+</style>
 </head>
 <body>
 
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <span class="logo-icon">🫐</span>
-      <div>
-        <div class="logo-title">AçaíPrice</div>
-        <div class="logo-sub">Precificação Inteligente</div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <span class="brand-icon">🫐</span>
+    <span class="brand-name">AçaíPrice</span>
+    <span class="brand-sub">Sistema de Precificação</span>
+  </div>
+
+  <div class="sidebar-steps">
+    <div class="steps-label">Fluxo de Cadastro</div>
+    <div class="step-item done" data-page="insumos" id="sideStep1">
+      <div class="step-num">1</div>
+      <div class="step-text">
+        <span class="step-name">Insumos</span>
+        <span class="step-desc">Cadastre os ingredientes</span>
       </div>
     </div>
-
-    <nav class="sidebar-nav">
-      <button class="nav-btn active" data-page="dashboard">
-        <span class="nav-icon">◈</span> Dashboard
-      </button>
-      <button class="nav-btn" data-page="insumos">
-        <span class="nav-icon">◉</span> Insumos
-      </button>
-      <button class="nav-btn" data-page="estoque">
-        <span class="nav-icon">▣</span> Estoque
-        <span class="badge-alert hidden" id="badgeEstoque">!</span>
-      </button>
-      <button class="nav-btn" data-page="produtos">
-        <span class="nav-icon">◎</span> Produtos
-      </button>
-      <button class="nav-btn" data-page="calculos">
-        <span class="nav-icon">◐</span> Cálculos
-      </button>
-      <button class="nav-btn" data-page="vendas-reais">
-        <span class="nav-icon">◑</span> Vendas Reais
-      </button>
-      <button class="nav-btn" data-page="simulacao">
-        <span class="nav-icon">◒</span> Simulação
-      </button>
-    </nav>
-
-    <div class="sidebar-footer">
-      <button class="btn-danger-ghost" id="btnLimparTudo" title="Limpar todos os dados">
-        <span>⊗</span> Limpar dados
-      </button>
-      <button class="btn-ghost" id="btnExportar" title="Imprimir relatório">
-        <span>↗</span> Exportar
-      </button>
+    <div class="step-item" data-page="produtos" id="sideStep2">
+      <div class="step-num">2</div>
+      <div class="step-text">
+        <span class="step-name">Produtos</span>
+        <span class="step-desc">Monte as receitas</span>
+      </div>
     </div>
-  </aside>
+    <div class="step-item" data-page="estoque" id="sideStep3">
+      <div class="step-num">3</div>
+      <div class="step-text">
+        <span class="step-name">Produção</span>
+        <span class="step-desc">Produza e gerencie estoque</span>
+      </div>
+    </div>
+    <div class="step-item" data-page="vendas-reais" id="sideStep4">
+      <div class="step-num">4</div>
+      <div class="step-text">
+        <span class="step-name">Vendas</span>
+        <span class="step-desc">Registre cada venda</span>
+      </div>
+    </div>
+  </div>
 
-  <main class="main-content">
+  <nav class="sidebar-nav">
+    <span class="nav-label">Análise</span>
+    <button class="nav-btn" data-page="dashboard"><span class="ni">⊞</span> Dashboard</button>
+    <button class="nav-btn" data-page="calculos"><span class="ni">◈</span> Precificação</button>
+    <button class="nav-btn" data-page="simulacao"><span class="ni">◒</span> Simulação</button>
+    <button class="nav-btn" data-page="estoque">
+      <span class="ni">▣</span> Estoque
+      <span class="badge-alert hidden" id="badgeEstoque"></span>
+    </button>
+  </nav>
 
-    <header class="topbar">
-      <button class="menu-toggle" id="menuToggle">☰</button>
-      <span class="topbar-title">🫐 AçaíPrice</span>
-      <div></div>
-    </header>
+  <div class="sidebar-footer">
+    <button id="btnExportar">↗ Exportar relatório</button>
+    <button class="btn-clear" id="btnLimparTudo">⊗ Apagar todos os dados</button>
+  </div>
+</aside>
+
+<div class="main-content">
+  <header class="topbar" id="topbar">
+    <button class="menu-toggle" id="menuToggle">☰</button>
+    <span class="topbar-title">🫐 AçaíPrice</span>
+    <div></div>
+  </header>
+
+  <div class="page-container">
 
     <!-- ===== DASHBOARD ===== -->
     <section class="page active" id="page-dashboard">
       <div class="page-header">
-        <h1>Dashboard</h1>
-        <p class="page-desc">Visão geral do seu negócio</p>
+        <div class="ph-left">
+          <h1>Dashboard</h1>
+          <p>Visão geral do negócio</p>
+        </div>
       </div>
 
-      <div id="alertasEstoque" class="alertas-container"></div>
+      <div id="alertasEstoque"></div>
 
-      <div class="stats-grid" id="statsGrid"></div>
+      <!-- Flow guide -->
+      <div class="flow-guide" id="flowGuide">
+        <div class="flow-step done" data-page="insumos">
+          <div class="flow-step-num">1</div>
+          <div class="flow-step-body">
+            <div class="flow-step-title">Insumos</div>
+            <div class="flow-step-sub">Cadastre ingredientes e embalagens com custo</div>
+          </div>
+        </div>
+        <div class="flow-step" data-page="produtos">
+          <div class="flow-step-num">2</div>
+          <div class="flow-step-body">
+            <div class="flow-step-title">Produtos</div>
+            <div class="flow-step-sub">Monte receitas e defina margens</div>
+          </div>
+        </div>
+        <div class="flow-step" data-page="estoque">
+          <div class="flow-step-num">3</div>
+          <div class="flow-step-body">
+            <div class="flow-step-title">Produção</div>
+            <div class="flow-step-sub">Produza e gerencie seu estoque</div>
+          </div>
+        </div>
+        <div class="flow-step" data-page="vendas-reais">
+          <div class="flow-step-num">4</div>
+          <div class="flow-step-body">
+            <div class="flow-step-title">Vendas</div>
+            <div class="flow-step-sub">Registre vendas e acompanhe lucro</div>
+          </div>
+        </div>
+      </div>
 
-      <div class="dashboard-grid">
+      <div class="stats-row" id="statsGrid"></div>
+
+      <div class="dash-grid">
         <div class="card">
           <div class="card-header">
-            <h3>Produtos Cadastrados</h3>
-            <button class="btn-small" data-page="produtos">Ver todos →</button>
+            <h3>📦 Produtos Cadastrados</h3>
+            <button class="btn-sm" data-page="produtos">Ver todos →</button>
           </div>
           <div id="dashProdutos" class="dash-list"></div>
         </div>
         <div class="card">
           <div class="card-header">
-            <h3>Estoque Crítico</h3>
-            <button class="btn-small" data-page="estoque">Ver estoque →</button>
+            <h3>⚠ Estoque Crítico</h3>
+            <button class="btn-sm" data-page="estoque">Ver estoque →</button>
           </div>
           <div id="dashEstoqueCritico" class="dash-list"></div>
         </div>
         <div class="card">
           <div class="card-header">
-            <h3>Últimas Vendas</h3>
-            <button class="btn-small" data-page="vendas-reais">Ver todas →</button>
+            <h3>🛍 Últimas Vendas</h3>
+            <button class="btn-sm" data-page="vendas-reais">Ver todas →</button>
           </div>
           <div id="dashUltimasVendas" class="dash-list"></div>
         </div>
         <div class="card">
           <div class="card-header">
-            <h3>Top Insumos por Custo</h3>
-            <button class="btn-small" data-page="insumos">Ver todos →</button>
+            <h3>🧪 Top Insumos por Custo</h3>
+            <button class="btn-sm" data-page="insumos">Ver todos →</button>
           </div>
           <div id="dashInsumos" class="dash-list"></div>
         </div>
       </div>
     </section>
 
-    <!-- ===== INSUMOS ===== -->
+    <!-- ===== PASSO 1: INSUMOS ===== -->
     <section class="page" id="page-insumos">
       <div class="page-header">
-        <h1>Insumos</h1>
-        <p class="page-desc">Gerencie matérias-primas e embalagens</p>
+        <div class="ph-left">
+          <div class="step-badge">Passo 1 de 4 · Insumos</div>
+          <h1>Cadastro de Insumos</h1>
+          <p>Registre todos os ingredientes e embalagens que compõem seus produtos. O custo unitário é calculado automaticamente.</p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <select id="filtroCategoria" style="width:auto;padding:8px 12px;font-size:.82rem;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--surface);color:var(--text-2);font-family:Nunito Sans,sans-serif;">
+            <option value="">Todas categorias</option>
+            <option value="fruta">Fruta / Polpa</option>
+            <option value="laticinios">Laticínios</option>
+            <option value="complemento">Complemento</option>
+            <option value="embalagem">Embalagem</option>
+            <option value="outros">Outros</option>
+          </select>
+          <div class="search-box">
+            <span class="search-icon">⌕</span>
+            <input type="text" id="buscaInsumo" placeholder="Buscar insumo..." />
+          </div>
+        </div>
       </div>
 
       <div class="card form-card" id="formInsumoCard">
-        <div class="card-header">
-          <h3 id="formInsumoTitulo">Novo Insumo</h3>
-          <button class="btn-icon" id="btnToggleFormInsumo" title="Minimizar">−</button>
+        <div class="card-header form-card-header" id="formInsumoToggle">
+          <h3 id="formInsumoTitulo">➕ Novo Insumo</h3>
+          <button class="toggle-form-btn" id="btnToggleFormInsumo">−</button>
         </div>
-        <div id="formInsumoBody">
+        <div id="formInsumoBody" class="form-card-body">
           <form id="formInsumo" autocomplete="off">
             <input type="hidden" id="insumoId" />
-            <div class="form-grid form-grid-insumo">
+            <div class="form-grid fg-auto">
               <div class="form-group span-2">
                 <label>Nome do Insumo *</label>
-                <input type="text" id="insumoNome" placeholder="Ex: Açaí grosso" required />
+                <input type="text" id="insumoNome" placeholder="Ex: Polpa de Açaí Grosso" required />
               </div>
               <div class="form-group">
                 <label>Categoria</label>
@@ -135,7 +1049,7 @@
                 </select>
               </div>
               <div class="form-group">
-                <label>Unidade de Medida *</label>
+                <label>Unidade *</label>
                 <select id="insumoUnidade">
                   <option value="kg">kg</option>
                   <option value="g">g</option>
@@ -146,43 +1060,49 @@
                   <option value="pct">pacote</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label>Quantidade Comprada *</label>
-                <input type="number" id="insumoQtd" placeholder="Ex: 10" min="0.001" step="any" required />
-              </div>
-              <div class="form-group">
-                <label>Preço Pago (R$) *</label>
-                <input type="number" id="insumoPreco" placeholder="Ex: 45.00" min="0.01" step="0.01" required />
-              </div>
-              <div class="form-group">
-                <label>Custo Unitário (calculado)</label>
-                <input type="text" id="insumoCustoUnitario" readonly class="readonly-field" placeholder="R$ 0,00" />
+            </div>
+            <div class="form-section">
+              <div class="form-section-title">💰 Custo de Compra</div>
+              <div class="form-grid fg-4">
+                <div class="form-group">
+                  <label>Qtd Comprada *</label>
+                  <input type="number" id="insumoQtd" placeholder="Ex: 10" min="0.001" step="any" required />
+                </div>
+                <div class="form-group">
+                  <label>Preço Pago (R$) *</label>
+                  <input type="number" id="insumoPreco" placeholder="Ex: 45.00" min="0.01" step="0.01" required />
+                </div>
+                <div class="form-group">
+                  <label>Custo Unitário</label>
+                  <input type="text" id="insumoCustoUnitario" readonly class="readonly-input" placeholder="Calculado auto" />
+                </div>
+                <div class="form-group">
+                  <label>Fornecedor</label>
+                  <input type="text" id="insumoFornecedor" placeholder="Ex: Distribuidora..." />
+                </div>
               </div>
             </div>
-
-            <div class="form-section-title">Controle de Estoque</div>
-            <div class="form-grid form-grid-estoque">
-              <div class="form-group">
-                <label>Estoque Atual *</label>
-                <input type="number" id="insumoEstoqueAtual" placeholder="Ex: 5" min="0" step="any" required value="0"/>
-              </div>
-              <div class="form-group">
-                <label>Estoque Mínimo (alerta)</label>
-                <input type="number" id="insumoEstoqueMinimo" placeholder="Ex: 2" min="0" step="any" value="0"/>
-              </div>
-              <div class="form-group">
-                <label>Unidade do Estoque</label>
-                <input type="text" id="insumoEstoqueUnidade" readonly class="readonly-field" placeholder="Mesma unidade" />
-              </div>
-              <div class="form-group">
-                <label>Fornecedor (opcional)</label>
-                <input type="text" id="insumoFornecedor" placeholder="Ex: Distribuidora XYZ" />
+            <div class="form-section">
+              <div class="form-section-title">📦 Controle de Estoque</div>
+              <div class="form-grid fg-4">
+                <div class="form-group">
+                  <label>Estoque Atual *</label>
+                  <input type="number" id="insumoEstoqueAtual" placeholder="Ex: 5" min="0" step="any" value="0" required />
+                </div>
+                <div class="form-group">
+                  <label>Estoque Mínimo</label>
+                  <input type="number" id="insumoEstoqueMinimo" placeholder="Alerta abaixo de..." min="0" step="any" value="0" />
+                  <span class="field-hint">Recebe alerta quando atingir este nível</span>
+                </div>
+                <div class="form-group">
+                  <label>Unidade do Estoque</label>
+                  <input type="text" id="insumoEstoqueUnidade" readonly class="readonly-input" placeholder="Mesma unidade" />
+                </div>
               </div>
             </div>
-
             <div class="form-actions">
-              <button type="button" class="btn-secondary" id="btnCancelarInsumo">Cancelar</button>
-              <button type="submit" class="btn-primary" id="btnSalvarInsumo">Salvar Insumo</button>
+              <button type="button" class="btn btn-secondary" id="btnCancelarInsumo">Cancelar</button>
+              <button type="submit" class="btn btn-primary">💾 Salvar Insumo</button>
             </div>
           </form>
         </div>
@@ -190,29 +1110,15 @@
 
       <div class="card">
         <div class="card-header">
-          <h3>Insumos Cadastrados</h3>
-          <div style="display:flex;gap:8px;align-items:center">
-            <select id="filtroCategoria" class="filter-select">
-              <option value="">Todas categorias</option>
-              <option value="fruta">Fruta / Polpa</option>
-              <option value="laticinios">Laticínios</option>
-              <option value="complemento">Complemento</option>
-              <option value="embalagem">Embalagem</option>
-              <option value="outros">Outros</option>
-            </select>
-            <div class="search-box">
-              <span>⌕</span>
-              <input type="text" id="buscaInsumo" placeholder="Buscar insumo..." />
-            </div>
-          </div>
+          <h3>Insumos Cadastrados (<span id="totalInsumos">0</span>)</h3>
         </div>
-        <div class="table-wrapper">
+        <div class="table-wrap">
           <table id="tabelaInsumos">
             <thead>
               <tr>
                 <th>Nome</th>
                 <th>Categoria</th>
-                <th>Custo Unit.</th>
+                <th>Custo Unitário</th>
                 <th>Estoque Atual</th>
                 <th>Mínimo</th>
                 <th>Status</th>
@@ -221,109 +1127,211 @@
               </tr>
             </thead>
             <tbody id="tbodyInsumos">
-              <tr class="empty-row"><td colspan="8">Nenhum insumo cadastrado.</td></tr>
+              <tr class="empty-row"><td colspan="8">Nenhum insumo cadastrado ainda.</td></tr>
             </tbody>
           </table>
+        </div>
+        <div style="padding:12px 0 0;text-align:right">
+          <button class="btn btn-primary" id="btnProxPasso1" data-page="produtos">Próximo: Cadastrar Produtos →</button>
         </div>
       </div>
     </section>
 
-    <!-- ===== ESTOQUE ===== -->
-    <section class="page" id="page-estoque">
+    <!-- ===== PASSO 2: PRODUTOS ===== -->
+    <section class="page" id="page-produtos">
       <div class="page-header">
-        <h1>Controle de Estoque</h1>
-        <p class="page-desc">Movimentações e ajustes de estoque</p>
+        <div class="ph-left">
+          <div class="step-badge">Passo 2 de 4 · Produtos</div>
+          <h1>Produtos & Receitas</h1>
+          <p>Monte a composição de cada produto com os insumos cadastrados. O preço sugerido é calculado automaticamente.</p>
+        </div>
+        <div class="search-box">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="buscaProduto" placeholder="Buscar produto..." />
+        </div>
       </div>
 
-      <!-- Cards de resumo -->
-      <div class="stats-grid" id="statsEstoque"></div>
+      <div class="card form-card" id="formProdutoCard">
+        <div class="card-header form-card-header" id="formProdutoToggle">
+          <h3 id="formProdutoTitulo">➕ Novo Produto</h3>
+          <button class="toggle-form-btn" id="btnToggleFormProduto">−</button>
+        </div>
+        <div id="formProdutoBody" class="form-card-body">
+          <form id="formProduto" autocomplete="off">
+            <input type="hidden" id="produtoId" />
+            <div class="form-grid fg-auto">
+              <div class="form-group span-2">
+                <label>Nome do Produto *</label>
+                <input type="text" id="produtoNome" placeholder="Ex: Açaí 500ml" required />
+              </div>
+              <div class="form-group">
+                <label>Rendimento (Qtd) *</label>
+                <input type="number" id="produtoRendimentoQtd" placeholder="Ex: 500" min="0.001" step="any" />
+                <span class="field-hint">Quantidade que a receita produz</span>
+              </div>
+              <div class="form-group">
+                <label>Unidade do Rendimento</label>
+                <select id="produtoRendimentoUnidade">
+                  <option value="ml">ml</option>
+                  <option value="g">g</option>
+                  <option value="un">un</option>
+                  <option value="kg">kg</option>
+                  <option value="l">l</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Margem de Lucro (%)</label>
+                <input type="number" id="produtoMargem" placeholder="Ex: 80" min="0" step="0.1" value="80" />
+                <span class="field-hint">Percentual sobre o custo</span>
+              </div>
+              <div class="form-group">
+                <label>Despesas Extras (R$)</label>
+                <input type="number" id="produtoDespesas" placeholder="Ex: 0.50" min="0" step="0.01" value="0" />
+                <span class="field-hint">Gás, energia, embalagem extra...</span>
+              </div>
+              <div class="form-group">
+                <label>Preço de Venda (R$)</label>
+                <input type="number" id="produtoPrecoVenda" placeholder="Opcional" min="0" step="0.01" />
+                <span class="field-hint">Se definido, usa nas vendas reais</span>
+              </div>
+            </div>
+            <div class="form-section">
+              <div class="form-section-title">📦 Estoque do Produto Acabado</div>
+              <div class="form-grid fg-auto">
+                <div class="form-group">
+                  <label>Estoque Atual</label>
+                  <input type="number" id="produtoEstoqueAtual" placeholder="0" min="0" step="any" value="0" />
+                </div>
+                <div class="form-group">
+                  <label>Estoque Mínimo</label>
+                  <input type="number" id="produtoEstoqueMinimo" placeholder="0" min="0" step="any" value="0" />
+                </div>
+                <div class="form-group span-2">
+                  <label>Descrição (opcional)</label>
+                  <input type="text" id="produtoDescricao" placeholder="Ex: Com granola e leite condensado" />
+                </div>
+              </div>
+            </div>
 
-      <!-- Movimentação manual -->
+            <div class="form-section">
+              <div class="form-section-title">🧪 Composição — Ingredientes da Receita</div>
+              <div class="comp-box">
+                <h4>Adicionar Componente à Receita</h4>
+                <div class="comp-add">
+                  <select id="selectInsumoComposicao">
+                    <option value="">Selecione um componente...</option>
+                  </select>
+                  <input type="number" id="qtdInsumoComposicao" placeholder="Qtd" min="0.001" step="any" />
+                  <select id="unidadeInsumoComposicao">
+                    <option value="g">g</option>
+                    <option value="ml">ml</option>
+                    <option value="un">un</option>
+                    <option value="kg">kg</option>
+                    <option value="l">l</option>
+                  </select>
+                  <span class="comp-hint" id="unidadeHintComposicao">—</span>
+                  <button type="button" class="btn btn-primary" id="btnAdicionarInsumo" style="white-space:nowrap">+ Adicionar</button>
+                </div>
+                <div class="table-wrap">
+                  <table id="tabelaComposicao">
+                    <thead>
+                      <tr>
+                        <th>Item</th>
+                        <th>Quantidade</th>
+                        <th>Unidade</th>
+                        <th>Custo</th>
+                        <th>Estoque</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbodyComposicao">
+                      <tr class="empty-row"><td colspan="6">Nenhum componente adicionado. Use o campo acima.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="comp-total">
+                  Custo dos componentes: <strong id="custoTotalComposicao">R$ 0,00</strong>
+                  &nbsp;·&nbsp; Preço sugerido com margem: <strong id="precoSugeridoComposicao" style="color:var(--green);font-family:Nunito,sans-serif">R$ 0,00</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" id="btnCancelarProduto">Cancelar</button>
+              <button type="submit" class="btn btn-primary">💾 Salvar Produto</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-header">
-          <h3>Registrar Movimentação</h3>
+          <h3>Produtos Cadastrados (<span id="totalProdutos">0</span>)</h3>
         </div>
-        <div class="form-grid form-grid-mov">
+        <div id="listaProdutos" class="produtos-grid"></div>
+        <div style="padding:12px 0 0;text-align:right">
+          <button class="btn btn-primary" id="btnProxPasso2" data-page="estoque">Próximo: Produção & Estoque →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PASSO 3: ESTOQUE / PRODUÇÃO ===== -->
+    <section class="page" id="page-estoque">
+      <div class="page-header">
+        <div class="ph-left">
+          <div class="step-badge">Passo 3 de 4 · Produção</div>
+          <h1>Produção & Estoque</h1>
+          <p>Registre a produção dos seus produtos — os insumos são descontados automaticamente. Aqui também você gerencia o estoque de matérias-primas.</p>
+        </div>
+      </div>
+
+      <div class="stats-row" id="statsEstoque"></div>
+
+      <!-- Produção (destaque) -->
+      <div class="card" style="border-color:var(--acai-mid);background:var(--acai-dim)">
+        <div class="card-header">
+          <h3 style="color:var(--acai)">📋 Registrar Produção de Produto Acabado</h3>
+        </div>
+        <div class="form-grid fg-auto">
           <div class="form-group span-2">
-            <label>Insumo *</label>
-            <select id="movInsumo">
-              <option value="">Selecione um insumo...</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Tipo *</label>
-            <select id="movTipo">
-              <option value="entrada">Entrada (compra)</option>
-              <option value="ajuste_mais">Ajuste positivo</option>
-              <option value="ajuste_menos">Ajuste negativo</option>
-              <option value="perda">Perda / Descarte</option>
-            </select>
+            <label>Produto Acabado *</label>
+            <select id="producaoProduto"><option value="">Selecione um produto...</option></select>
           </div>
           <div class="form-group">
             <label>Quantidade *</label>
-            <input type="number" id="movQuantidade" placeholder="Ex: 5" min="0.001" step="any" />
+            <input type="number" id="producaoQuantidade" placeholder="Ex: 10" min="0.001" step="any" />
           </div>
           <div class="form-group">
-            <label>Custo Total (R$)</label>
-            <input type="number" id="movCusto" placeholder="Apenas para entradas" min="0" step="0.01" />
+            <label>Unidade</label>
+            <select id="producaoQuantidadeUnidade">
+              <option value="ml">ml</option>
+              <option value="l">l</option>
+              <option value="g">g</option>
+              <option value="kg">kg</option>
+              <option value="un">un</option>
+            </select>
           </div>
           <div class="form-group span-2">
             <label>Observação</label>
-            <input type="text" id="movObservacao" placeholder="Ex: Compra no fornecedor X" />
+            <input type="text" id="producaoObservacao" placeholder="Ex: Lote do dia, turno manhã..." />
           </div>
         </div>
-        <div class="form-actions">
-          <button type="button" class="btn-primary" id="btnRegistrarMov">Registrar</button>
+        <div class="form-actions" style="border-top:1px solid var(--acai-mid)">
+          <button type="button" class="btn btn-primary" id="btnRegistrarProducao">▶ Registrar Produção</button>
         </div>
       </div>
 
-        <!-- Produção de produtos acabados -->
-        <div class="card">
-          <div class="card-header">
-            <h3>Produzir Produto Acabado</h3>
-          </div>
-          <div class="form-grid form-grid-mov">
-            <div class="form-group span-2">
-              <label>Produto Acabado *</label>
-              <select id="producaoProduto">
-                <option value="">Selecione um produto...</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Quantidade *</label>
-              <input type="number" id="producaoQuantidade" placeholder="Ex: 10" min="0.001" step="any" />
-            </div>
-            <div class="form-group">
-              <label>Unidade</label>
-              <select id="producaoQuantidadeUnidade">
-                <option value="ml">ml</option>
-                <option value="l">l</option>
-                <option value="g">g</option>
-                <option value="kg">kg</option>
-                <option value="un">un</option>
-              </select>
-            </div>
-            <div class="form-group span-2">
-              <label>Observação</label>
-              <input type="text" id="producaoObservacao" placeholder="Ex: Produção do dia / lote 12" />
-            </div>
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn-primary" id="btnRegistrarProducao">Registrar Produção</button>
-          </div>
-        </div>
-
-      <!-- Tabela de estoque -->
+      <!-- Tabs estoque -->
       <div class="card">
         <div class="card-header">
-          <h3>Estoque Atual</h3>
-          <div style="display:flex;gap:8px">
-            <button class="btn-small active-filter" id="filtroTodosEstoque" onclick="filtrarEstoque('todos')">Todos</button>
-            <button class="btn-small" id="filtroAlertaEstoque" onclick="filtrarEstoque('alerta')">⚠ Em alerta</button>
-            <button class="btn-small" id="filtroZeradoEstoque" onclick="filtrarEstoque('zerado')">✕ Zerados</button>
+          <h3>Estoque de Insumos</h3>
+          <div style="display:flex;gap:6px">
+            <button class="btn-sm active" id="filtroTodosEstoque" onclick="filtrarEstoque('todos')">Todos</button>
+            <button class="btn-sm" id="filtroAlertaEstoque" onclick="filtrarEstoque('alerta')">⚠ Em alerta</button>
+            <button class="btn-sm" id="filtroZeradoEstoque" onclick="filtrarEstoque('zerado')">✕ Zerados</button>
           </div>
         </div>
-        <div class="table-wrapper">
+        <div class="table-wrap">
           <table>
             <thead>
               <tr>
@@ -344,12 +1352,12 @@
         </div>
       </div>
 
-      <!-- Tabela de produtos acabados -->
+      <!-- Produtos acabados estoque -->
       <div class="card">
         <div class="card-header">
           <h3>Estoque de Produtos Acabados</h3>
         </div>
-        <div class="table-wrapper">
+        <div class="table-wrap">
           <table>
             <thead>
               <tr>
@@ -369,24 +1377,56 @@
         </div>
       </div>
 
-      <!-- Histórico de movimentações -->
+      <!-- Mov Manual -->
+      <div class="card">
+        <div class="card-header form-card-header" id="movManualToggle">
+          <h3>⚙ Ajuste Manual de Estoque de Insumo</h3>
+          <button class="toggle-form-btn" id="btnToggleMovManual">+</button>
+        </div>
+        <div id="movManualBody" class="form-card-body hidden">
+          <div class="form-grid fg-auto">
+            <div class="form-group span-2">
+              <label>Insumo *</label>
+              <select id="movInsumo"><option value="">Selecione um insumo...</option></select>
+            </div>
+            <div class="form-group">
+              <label>Tipo de Ajuste *</label>
+              <select id="movTipo">
+                <option value="entrada">Entrada (compra)</option>
+                <option value="ajuste_mais">Ajuste positivo</option>
+                <option value="ajuste_menos">Ajuste negativo</option>
+                <option value="perda">Perda / Descarte</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Quantidade *</label>
+              <input type="number" id="movQuantidade" placeholder="Ex: 5" min="0.001" step="any" />
+            </div>
+            <div class="form-group">
+              <label>Custo Total (R$)</label>
+              <input type="number" id="movCusto" placeholder="Apenas para entradas" min="0" step="0.01" />
+            </div>
+            <div class="form-group span-2">
+              <label>Observação</label>
+              <input type="text" id="movObservacao" placeholder="Ex: Compra no fornecedor X" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-primary" id="btnRegistrarMov">Registrar Ajuste</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Histórico -->
       <div class="card">
         <div class="card-header">
           <h3>Histórico de Movimentações</h3>
-          <button class="btn-small" id="btnLimparHistMov">Limpar histórico</button>
+          <button class="btn-sm" id="btnLimparHistMov">Limpar histórico</button>
         </div>
-        <div class="table-wrapper">
+        <div class="table-wrap">
           <table>
             <thead>
-              <tr>
-                <th>Data/Hora</th>
-                <th>Item</th>
-                <th>Tipo</th>
-                <th>Quantidade</th>
-                <th>Custo</th>
-                <th>Saldo Após</th>
-                <th>Observação</th>
-              </tr>
+              <tr><th>Data/Hora</th><th>Item</th><th>Tipo</th><th>Quantidade</th><th>Custo</th><th>Saldo Após</th><th>Observação</th></tr>
             </thead>
             <tbody id="tbodyHistMov">
               <tr class="empty-row"><td colspan="7">Nenhuma movimentação registrada.</td></tr>
@@ -394,237 +1434,36 @@
           </table>
         </div>
       </div>
-    </section>
 
-    <!-- ===== PRODUTOS ===== -->
-    <section class="page" id="page-produtos">
-      <div class="page-header">
-        <h1>Produtos</h1>
-        <p class="page-desc">Cadastre e componha seus produtos finais</p>
-      </div>
-
-      <div class="card form-card" id="formProdutoCard">
-        <div class="card-header">
-          <h3 id="formProdutoTitulo">Novo Produto</h3>
-          <button class="btn-icon" id="btnToggleFormProduto" title="Minimizar">−</button>
-        </div>
-        <div id="formProdutoBody">
-          <form id="formProduto" autocomplete="off">
-            <input type="hidden" id="produtoId" />
-            <div class="form-grid form-grid-produto">
-              <div class="form-group span-2">
-                <label>Nome do Produto *</label>
-                <input type="text" id="produtoNome" placeholder="Ex: Açaí 500ml" required />
-              </div>
-              <div class="form-group">
-                <label>Rendimento (Qtd) *</label>
-                <input type="number" id="produtoRendimentoQtd" placeholder="Ex: 500" min="0.001" step="any" />
-              </div>
-              <div class="form-group">
-                <label>Unidade</label>
-                <select id="produtoRendimentoUnidade">
-                  <option value="g">g</option>
-                  <option value="ml">ml</option>
-                  <option value="un">un</option>
-                  <option value="kg">kg</option>
-                  <option value="l">l</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Margem de Lucro (%)</label>
-                <input type="number" id="produtoMargem" placeholder="Ex: 80" min="0" step="0.1" value="80" />
-              </div>
-              <div class="form-group">
-                <label>Despesas Extras (R$)</label>
-                <input type="number" id="produtoDespesas" placeholder="Ex: 0.50" min="0" step="0.01" value="0" />
-              </div>
-              <div class="form-group">
-                <label>Preço de Venda (R$)</label>
-                <input type="number" id="produtoPrecoVenda" placeholder="Opcional" min="0" step="0.01" />
-                <small class="field-hint">Se informado, usa esse valor para vendas reais</small>
-              </div>
-              <div class="form-group">
-                <label>Estoque Atual</label>
-                <input type="number" id="produtoEstoqueAtual" placeholder="Ex: 10" min="0" step="any" value="0" />
-              </div>
-              <div class="form-group">
-                <label>Estoque Mínimo</label>
-                <input type="number" id="produtoEstoqueMinimo" placeholder="Ex: 3" min="0" step="any" value="0" />
-              </div>
-              <div class="form-group span-2">
-                <label>Descrição (opcional)</label>
-                <input type="text" id="produtoDescricao" placeholder="Ex: Com granola e leite condensado" />
-              </div>
-            </div>
-
-            <div class="composicao-section">
-              <h4>Composição — Insumos e Produtos</h4>
-              <div class="composicao-add">
-                <select id="selectInsumoComposicao">
-                  <option value="">Selecione um componente...</option>
-                </select>
-                <input type="number" id="qtdInsumoComposicao" placeholder="Quantidade" min="0.001" step="any" />
-                <select id="unidadeInsumoComposicao">
-                  <option value="g">g</option>
-                  <option value="ml">ml</option>
-                  <option value="un">un</option>
-                  <option value="kg">kg</option>
-                  <option value="l">l</option>
-                </select>
-                <span class="unidade-hint" id="unidadeHintComposicao">—</span>
-                <button type="button" class="btn-primary btn-small" id="btnAdicionarInsumo">+ Adicionar</button>
-              </div>
-              <table id="tabelaComposicao">
-                <thead>
-                  <tr>
-                    <th>Item</th>
-                    <th>Qtd</th>
-                    <th>Unidade</th>
-                    <th>Custo</th>
-                    <th>Estoque disponível</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody id="tbodyComposicao">
-                  <tr class="empty-row"><td colspan="6">Nenhum componente adicionado.</td></tr>
-                </tbody>
-              </table>
-              <div class="composicao-total">
-                Custo total dos componentes: <strong id="custoTotalComposicao">R$ 0,00</strong>
-                &nbsp;|&nbsp; Preço sugerido (c/ margem): <strong id="precoSugeridoComposicao" style="color:var(--green)">R$ 0,00</strong>
-              </div>
-            </div>
-
-            <div class="form-actions">
-              <button type="button" class="btn-secondary" id="btnCancelarProduto">Cancelar</button>
-              <button type="submit" class="btn-primary" id="btnSalvarProduto">Salvar Produto</button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <h3>Produtos Cadastrados</h3>
-          <div class="search-box">
-            <span>⌕</span>
-            <input type="text" id="buscaProduto" placeholder="Buscar produto..." />
-          </div>
-        </div>
-        <div id="listaProdutos" class="produtos-grid"></div>
+      <div style="text-align:right">
+        <button class="btn btn-primary" data-page="vendas-reais">Próximo: Registrar Vendas →</button>
       </div>
     </section>
 
-    <!-- ===== CÁLCULOS ===== -->
-    <section class="page" id="page-calculos">
-      <div class="page-header">
-        <h1>Cálculos & Precificação</h1>
-        <p class="page-desc">Análise detalhada de custos e preços sugeridos</p>
-      </div>
-
-      <div class="calc-selector card">
-        <label>Selecionar produto para análise:</label>
-        <select id="selectProdutoCalculo">
-          <option value="">— Selecione um produto —</option>
-        </select>
-      </div>
-
-      <div id="painelCalculo" class="hidden">
-        <div class="calc-header card">
-          <div class="calc-produto-info">
-            <h2 id="calcNomeProduto">—</h2>
-            <span id="calcVolumeProduto" class="tag">—</span>
-          </div>
-        </div>
-
-        <div class="calc-cards">
-          <div class="calc-card custo" style="--accent-color:var(--coral)">
-            <div class="calc-card-label">Custo de Componentes</div>
-            <div class="calc-card-value" id="calcCustoInsumos">R$ 0,00</div>
-          </div>
-          <div class="calc-card despesa" style="--accent-color:#f59e0b">
-            <div class="calc-card-label">Despesas Extras</div>
-            <div class="calc-card-value" id="calcDespesas">R$ 0,00</div>
-          </div>
-          <div class="calc-card total" style="--accent-color:var(--coral-light)">
-            <div class="calc-card-label">Custo Total</div>
-            <div class="calc-card-value" id="calcCustoTotal">R$ 0,00</div>
-          </div>
-          <div class="calc-card margem" style="--accent-color:var(--acai-light)">
-            <div class="calc-card-label">Margem de Lucro</div>
-            <div class="calc-card-value" id="calcMargem">0%</div>
-          </div>
-          <div class="calc-card preco" style="--accent-color:var(--green)">
-            <div class="calc-card-label">Preço Sugerido</div>
-            <div class="calc-card-value" id="calcPrecoSugerido">R$ 0,00</div>
-          </div>
-          <div class="calc-card lucro" style="--accent-color:#2563eb">
-            <div class="calc-card-label">Lucro Estimado/Un.</div>
-            <div class="calc-card-value" id="calcLucro">R$ 0,00</div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header"><h3>Composição Detalhada</h3></div>
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Componente</th>
-                  <th>Categoria</th>
-                  <th>Qtd Usada</th>
-                  <th>Custo Unit.</th>
-                  <th>Custo Total</th>
-                  <th>% do Custo</th>
-                </tr>
-              </thead>
-              <tbody id="tbodyDetalheCalculo"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="card simulador">
-          <div class="card-header"><h3>Simulador de Margem</h3></div>
-          <div class="simulador-body">
-            <label>Ajustar margem de lucro: <strong id="simMargemVal">80%</strong></label>
-            <input type="range" id="simMargem" min="0" max="300" step="1" value="80" />
-            <div class="sim-result">
-              Preço simulado: <span id="simPreco">R$ 0,00</span>
-              &nbsp;|&nbsp; Lucro simulado: <span id="simLucro">R$ 0,00</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="semProdutos" class="empty-state">
-        <div class="empty-icon">◎</div>
-        <p>Nenhum produto encontrado. Cadastre produtos primeiro.</p>
-        <button class="btn-primary" data-page="produtos">Cadastrar Produto</button>
-      </div>
-    </section>
-
-    <!-- ===== VENDAS REAIS ===== -->
+    <!-- ===== PASSO 4: VENDAS ===== -->
     <section class="page" id="page-vendas-reais">
       <div class="page-header">
-        <h1>Vendas Reais</h1>
-        <p class="page-desc">Registre vendas realizadas — o estoque é abatido automaticamente</p>
+        <div class="ph-left">
+          <div class="step-badge">Passo 4 de 4 · Vendas</div>
+          <h1>Registro de Vendas</h1>
+          <p>Registre cada venda realizada. O estoque do produto é abatido automaticamente.</p>
+        </div>
       </div>
 
-      <!-- Formulário de venda -->
+      <div class="stats-row" id="statsVendasHoje"></div>
+
       <div class="card">
         <div class="card-header">
-          <h3>Registrar Venda</h3>
+          <h3>🛍 Nova Venda</h3>
         </div>
-        <div class="form-grid form-grid-venda-real">
+        <div class="form-grid fg-auto">
           <div class="form-group span-2">
             <label>Produto *</label>
-            <select id="vendaRealProduto">
-              <option value="">— Selecione um produto —</option>
-            </select>
+            <select id="vendaRealProduto"><option value="">— Selecione um produto —</option></select>
           </div>
           <div class="form-group">
             <label>Quantidade *</label>
-            <input type="number" id="vendaRealQtd" min="1" step="1" value="1" placeholder="Ex: 5" />
+            <input type="number" id="vendaRealQtd" min="1" step="1" value="1" />
           </div>
           <div class="form-group">
             <label>Preço Unit. de Venda (R$) *</label>
@@ -650,94 +1489,147 @@
           </div>
         </div>
 
-        <!-- Preview da venda -->
-        <div id="previewVenda" class="preview-venda hidden">
-          <div class="preview-item">
-            <span class="preview-label">Preço total</span>
-            <span class="preview-value" id="pvPrecoTotal">—</span>
-          </div>
-          <div class="preview-item">
-            <span class="preview-label">Custo total</span>
-            <span class="preview-value preview-custo" id="pvCustoTotal">—</span>
-          </div>
-          <div class="preview-item">
-            <span class="preview-label">Lucro</span>
-            <span class="preview-value preview-lucro" id="pvLucro">—</span>
-          </div>
-          <div class="preview-item">
-            <span class="preview-label">Margem efetiva</span>
-            <span class="preview-value preview-margem" id="pvMargem">—</span>
-          </div>
-          <div id="pvAvisoEstoque" class="aviso-estoque hidden">
-            ⚠ Atenção: estoque de alguns insumos ficará abaixo do mínimo após esta venda.
-          </div>
+        <div id="previewVenda" class="venda-preview hidden">
+          <div class="vp-item"><span class="vp-label">Preço total</span><span class="vp-val" id="pvPrecoTotal">—</span></div>
+          <div class="vp-item"><span class="vp-label">Custo total</span><span class="vp-val vp-custo" id="pvCustoTotal">—</span></div>
+          <div class="vp-item"><span class="vp-label">Lucro</span><span class="vp-val" id="pvLucro">—</span></div>
+          <div class="vp-item"><span class="vp-label">Margem efetiva</span><span class="vp-val vp-margem" id="pvMargem">—</span></div>
+          <div id="pvAvisoEstoque" class="vp-warn hidden"></div>
         </div>
 
         <div class="form-actions">
-          <button type="button" class="btn-secondary" id="btnCancelarVendaReal">Limpar</button>
-          <button type="button" class="btn-primary" id="btnRegistrarVenda">✓ Registrar Venda</button>
+          <button type="button" class="btn btn-secondary" id="btnCancelarVendaReal">Limpar</button>
+          <button type="button" class="btn btn-primary" id="btnRegistrarVenda">✓ Confirmar Venda</button>
         </div>
       </div>
 
-      <!-- Resumo do dia -->
-      <div class="stats-grid" id="statsVendasHoje"></div>
-
-      <!-- Filtros e histórico -->
       <div class="card">
         <div class="card-header">
           <h3>Histórico de Vendas</h3>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <select id="filtroVendasPeriodo" class="filter-select">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <select id="filtroVendasPeriodo" style="width:auto;padding:7px 10px;font-size:.82rem;border-radius:var(--radius-xs);border:1.5px solid var(--border);background:var(--surface);font-family:Nunito Sans,sans-serif;color:var(--text-2)">
               <option value="hoje">Hoje</option>
               <option value="semana">Esta semana</option>
               <option value="mes" selected>Este mês</option>
               <option value="todos">Todos</option>
             </select>
-            <select id="filtroVendasProduto" class="filter-select">
+            <select id="filtroVendasProduto" style="width:auto;padding:7px 10px;font-size:.82rem;border-radius:var(--radius-xs);border:1.5px solid var(--border);background:var(--surface);font-family:Nunito Sans,sans-serif;color:var(--text-2)">
               <option value="">Todos os produtos</option>
             </select>
-            <button class="btn-small btn-danger-outline" id="btnLimparHistVendas">Limpar histórico</button>
+            <button class="btn-outline-danger" id="btnLimparHistVendas">Limpar histórico</button>
           </div>
         </div>
-        <div class="table-wrapper">
+        <div class="table-wrap">
           <table>
             <thead>
-              <tr>
-                <th>Data/Hora</th>
-                <th>Produto</th>
-                <th>Qtd</th>
-                <th>Preço Unit.</th>
-                <th>Total</th>
-                <th>Custo</th>
-                <th>Lucro</th>
-                <th>Canal</th>
-                <th>Ações</th>
-              </tr>
+              <tr><th>Data/Hora</th><th>Produto</th><th>Qtd</th><th>Preço Unit.</th><th>Total</th><th>Custo</th><th>Lucro</th><th>Canal</th><th></th></tr>
             </thead>
             <tbody id="tbodyVendasReais">
               <tr class="empty-row"><td colspan="9">Nenhuma venda registrada.</td></tr>
             </tbody>
           </table>
         </div>
-        <div class="tabela-totais" id="totaisVendas"></div>
+        <div id="totaisVendas"></div>
+      </div>
+    </section>
+
+    <!-- ===== PRECIFICAÇÃO ===== -->
+    <section class="page" id="page-calculos">
+      <div class="page-header">
+        <div class="ph-left">
+          <h1>Precificação & Análise</h1>
+          <p>Analise os custos detalhados e simule diferentes margens de lucro</p>
+        </div>
+      </div>
+
+      <div class="card" style="padding:16px 22px;">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <label style="font-size:.86rem;color:var(--text-2);text-transform:none;letter-spacing:0;font-weight:600;white-space:nowrap">Selecionar produto:</label>
+          <select id="selectProdutoCalculo" style="flex:1;min-width:200px">
+            <option value="">— Selecione um produto —</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="painelCalculo" class="hidden">
+        <div class="card" style="padding:16px 22px">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <h2 id="calcNomeProduto" style="font-size:1.2rem;font-weight:800">—</h2>
+            <span id="calcVolumeProduto" class="tag tag-canal">—</span>
+          </div>
+        </div>
+
+        <div class="calc-cards">
+          <div class="calc-card" style="--accent:var(--coral)">
+            <div class="cc-label">Custo Componentes</div>
+            <div class="cc-val" id="calcCustoInsumos">R$ 0,00</div>
+          </div>
+          <div class="calc-card" style="--accent:#f59e0b">
+            <div class="cc-label">Despesas Extras</div>
+            <div class="cc-val" id="calcDespesas">R$ 0,00</div>
+          </div>
+          <div class="calc-card" style="--accent:var(--coral)">
+            <div class="cc-label">Custo Total</div>
+            <div class="cc-val" id="calcCustoTotal">R$ 0,00</div>
+          </div>
+          <div class="calc-card" style="--accent:var(--acai)">
+            <div class="cc-label">Margem</div>
+            <div class="cc-val" id="calcMargem">0%</div>
+          </div>
+          <div class="calc-card cc-preco" style="--accent:var(--green)">
+            <div class="cc-label">Preço Sugerido</div>
+            <div class="cc-val" id="calcPrecoSugerido">R$ 0,00</div>
+          </div>
+          <div class="calc-card cc-lucro" style="--accent:#2563eb">
+            <div class="cc-label">Lucro/Un.</div>
+            <div class="cc-val" id="calcLucro">R$ 0,00</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>Composição Detalhada</h3></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Componente</th><th>Categoria</th><th>Qtd Usada</th><th>Custo Unit.</th><th>Custo Total</th><th>% do Custo</th></tr>
+              </thead>
+              <tbody id="tbodyDetalheCalculo"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>Simulador de Margem</h3></div>
+          <div class="sim-body">
+            <div class="sim-label">Ajustar margem: <strong id="simMargemVal">80%</strong></div>
+            <input type="range" id="simMargem" min="0" max="300" step="1" value="80" />
+            <div class="sim-result">Preço simulado: <span id="simPreco">R$ 0,00</span> &nbsp;·&nbsp; Lucro simulado: <span id="simLucro">R$ 0,00</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="semProdutos" class="empty-state">
+        <div class="ei">◎</div>
+        <p>Cadastre produtos primeiro para analisar a precificação.</p>
+        <button class="btn btn-primary" data-page="produtos">Ir para Produtos →</button>
       </div>
     </section>
 
     <!-- ===== SIMULAÇÃO ===== -->
     <section class="page" id="page-simulacao">
       <div class="page-header">
-        <h1>Estimativa de Vendas</h1>
-        <p class="page-desc">Simule faturamento, custo e lucro dos produtos acabados</p>
+        <div class="ph-left">
+          <h1>Estimativa de Vendas</h1>
+          <p>Projete faturamento e lucro com base em metas de vendas diárias</p>
+        </div>
       </div>
 
-      <div class="card vendas-card">
-        <div class="card-header"><h3>Simular Venda</h3></div>
-        <div class="form-grid vendas-grid">
+      <div class="card">
+        <div class="card-header"><h3>Configurar Simulação</h3></div>
+        <div class="form-grid fg-auto">
           <div class="form-group span-2">
-            <label>Produto Acabado</label>
-            <select id="selectProdutoVenda">
-              <option value="">— Selecione um produto —</option>
-            </select>
+            <label>Produto</label>
+            <select id="selectProdutoVenda"><option value="">— Selecione —</option></select>
           </div>
           <div class="form-group">
             <label>Meta Diária</label>
@@ -752,8 +1644,8 @@
             <input type="number" id="vendaDiasMes" min="1" max="31" step="1" value="30" />
           </div>
           <div class="form-group">
-            <label>Preço Unitário de Venda (R$)</label>
-            <input type="number" id="vendaPrecoUnitario" min="0" step="0.01" placeholder="Ex: 18.90" />
+            <label>Preço Unitário (R$)</label>
+            <input type="number" id="vendaPrecoUnitario" min="0" step="0.01" placeholder="Preço de venda" />
           </div>
           <div class="form-group">
             <label>Desconto (%)</label>
@@ -761,128 +1653,1129 @@
           </div>
         </div>
         <div class="form-actions">
-          <button type="button" class="btn-secondary" id="btnLimparVenda">Limpar</button>
-          <button type="button" class="btn-primary" id="btnSimularVenda">Simular Venda</button>
+          <button type="button" class="btn btn-secondary" id="btnLimparVenda">Limpar</button>
+          <button type="button" class="btn btn-primary" id="btnSimularVenda">Simular →</button>
         </div>
       </div>
 
       <div id="painelVenda" class="hidden">
-        <div class="stats-grid vendas-stats">
-          <div class="stat-card" style="--accent-color: var(--acai-light)">
-            <div class="stat-label">Faturamento Bruto</div>
-            <div class="stat-value" id="vendaFaturamento">R$ 0,00</div>
-            <div class="stat-sub">receita total estimada</div>
-          </div>
-          <div class="stat-card" style="--accent-color: var(--coral)">
-            <div class="stat-label">Custo Total</div>
-            <div class="stat-value" id="vendaCustoTotal">R$ 0,00</div>
-            <div class="stat-sub">custo dos produtos vendidos</div>
-          </div>
-          <div class="stat-card" style="--accent-color: var(--green)">
-            <div class="stat-label">Lucro Estimado</div>
-            <div class="stat-value" id="vendaLucro">R$ 0,00</div>
-            <div class="stat-sub">resultado projetado</div>
-          </div>
-          <div class="stat-card" style="--accent-color: #80b3ff">
-            <div class="stat-label">Margem Efetiva</div>
-            <div class="stat-value" id="vendaMargem">0%</div>
-            <div class="stat-sub">sobre o faturamento</div>
-          </div>
-        </div>
-
-        <div class="stats-grid vendas-stats">
-          <div class="stat-card" style="--accent-color: var(--acai-light)">
-            <div class="stat-label">Quantidade no Mês</div>
-            <div class="stat-value" id="vendaQuantidadeMes">0</div>
-            <div class="stat-sub">meta diária × dias do mês</div>
-          </div>
-          <div class="stat-card" style="--accent-color: var(--coral)">
-            <div class="stat-label">Faturamento Mensal</div>
-            <div class="stat-value" id="vendaFaturamentoMes">R$ 0,00</div>
-            <div class="stat-sub">projeção do período</div>
-          </div>
-          <div class="stat-card" style="--accent-color: var(--green)">
-            <div class="stat-label">Lucro Mensal</div>
-            <div class="stat-value" id="vendaLucroMes">R$ 0,00</div>
-            <div class="stat-sub">resultado projetado</div>
-          </div>
-          <div class="stat-card" style="--accent-color: #80b3ff">
-            <div class="stat-label">Meta Atingida</div>
-            <div class="stat-value" id="vendaMetaAtingida">0%</div>
-            <div class="stat-sub">vendas ÷ meta</div>
-          </div>
-        </div>
+        <div class="stats-row" id="simStats1"></div>
+        <div class="stats-row" id="simStats2"></div>
       </div>
 
       <div id="semVenda" class="empty-state">
-        <div class="empty-icon">◑</div>
-        <p>Selecione um produto acabado para simular as vendas.</p>
+        <div class="ei">◑</div>
+        <p>Selecione um produto e configure os dados para simular as vendas.</p>
       </div>
     </section>
 
-  </main>
+  </div><!-- page-container -->
+</div><!-- main-content -->
 
-  <div class="modal-overlay hidden" id="modalConfirm">
-    <div class="modal">
-      <div class="modal-icon">⚠</div>
-      <h3 id="modalTitle">Confirmar ação</h3>
-      <p id="modalMessage">Tem certeza?</p>
-      <div class="modal-actions">
-        <button class="btn-secondary" id="modalCancel">Cancelar</button>
-        <button class="btn-danger" id="modalConfirmBtn">Confirmar</button>
-      </div>
+<!-- MODALS -->
+<div class="modal-overlay hidden" id="modalConfirm">
+  <div class="modal">
+    <h3 id="modalTitle">Confirmar ação</h3>
+    <p id="modalMessage">Tem certeza?</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="modalCancel">Cancelar</button>
+      <button class="btn btn-danger" id="modalConfirmBtn">Confirmar</button>
     </div>
   </div>
+</div>
 
-  <!-- Modal ajuste rápido de estoque -->
-  <div class="modal-overlay hidden" id="modalAjusteEstoque">
-    <div class="modal">
-      <h3>Ajuste Rápido de Estoque</h3>
-      <p id="modalAjusteNome" style="color:var(--acai);font-weight:600;margin-bottom:14px"></p>
-      <div class="form-group" style="text-align:left;margin-bottom:16px">
-        <label>Novo valor de estoque</label>
-        <input type="number" id="inputAjusteEstoque" min="0" step="any" style="margin-top:6px" />
-      </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" id="btnCancelarAjuste">Cancelar</button>
-        <button class="btn-primary" id="btnConfirmarAjuste">Salvar</button>
-      </div>
+<div class="modal-overlay hidden" id="modalAjusteEstoque">
+  <div class="modal">
+    <h3>Ajuste Rápido de Estoque</h3>
+    <p id="modalAjusteNome" style="color:var(--acai);font-weight:700;margin-bottom:16px;font-family:Nunito,sans-serif"></p>
+    <div class="form-group" style="margin-bottom:18px">
+      <label>Novo valor de estoque</label>
+      <input type="number" id="inputAjusteEstoque" min="0" step="any" style="margin-top:6px" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnCancelarAjuste">Cancelar</button>
+      <button class="btn btn-primary" id="btnConfirmarAjuste">Salvar</button>
     </div>
   </div>
+</div>
 
-  <div class="modal-overlay hidden" id="modalEstornoProducao">
-    <div class="modal">
-      <h3>Estornar Produção</h3>
-      <p id="modalEstornoNome" style="color:var(--acai);font-weight:600;margin-bottom:14px"></p>
-      <div class="form-group" style="text-align:left;margin-bottom:12px">
-        <label>Quantidade a estornar</label>
-        <input type="number" id="inputEstornoQuantidade" min="0.001" step="any" style="margin-top:6px" />
-      </div>
-      <div class="form-group" style="text-align:left;margin-bottom:12px">
-        <label>Unidade</label>
-        <select id="inputEstornoUnidade" style="margin-top:6px">
-          <option value="ml">ml</option>
-          <option value="l">l</option>
-          <option value="g">g</option>
-          <option value="kg">kg</option>
-          <option value="un">un</option>
-        </select>
-      </div>
-      <div class="form-group" style="text-align:left;margin-bottom:16px">
-        <label>Motivo</label>
-        <input type="text" id="inputEstornoMotivo" placeholder="Ex: Produzido errado" style="margin-top:6px" />
-      </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" id="btnCancelarEstorno">Cancelar</button>
-        <button class="btn-primary" id="btnConfirmarEstorno">Estornar</button>
-      </div>
+<div class="modal-overlay hidden" id="modalEstornoProducao">
+  <div class="modal">
+    <h3>Estornar Produção</h3>
+    <p id="modalEstornoNome" style="color:var(--acai);font-weight:700;margin-bottom:14px;font-family:Nunito,sans-serif"></p>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Quantidade a estornar</label>
+      <input type="number" id="inputEstornoQuantidade" min="0.001" step="any" style="margin-top:6px" />
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Unidade</label>
+      <select id="inputEstornoUnidade" style="margin-top:6px">
+        <option value="ml">ml</option><option value="l">l</option>
+        <option value="g">g</option><option value="kg">kg</option><option value="un">un</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:18px">
+      <label>Motivo</label>
+      <input type="text" id="inputEstornoMotivo" placeholder="Ex: Produzido errado" style="margin-top:6px" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnCancelarEstorno">Cancelar</button>
+      <button class="btn btn-primary" id="btnConfirmarEstorno">Estornar</button>
     </div>
   </div>
+</div>
 
-  <div class="toast hidden" id="toast">
-    <span id="toastMsg">Salvo com sucesso!</span>
-  </div>
+<div class="toast hidden" id="toast"><span id="toastMsg">Salvo!</span></div>
 
-  <script src="script.js"></script>
+<script>
+'use strict';
+
+const Storage = {
+  getInsumos()      { return JSON.parse(localStorage.getItem('ap2_insumos') || '[]'); },
+  saveInsumos(d)    { localStorage.setItem('ap2_insumos', JSON.stringify(d)); },
+  getProdutos()     { return JSON.parse(localStorage.getItem('ap2_produtos') || '[]'); },
+  saveProdutos(d)   { localStorage.setItem('ap2_produtos', JSON.stringify(d)); },
+  getVendas()       { return JSON.parse(localStorage.getItem('ap2_vendas') || '[]'); },
+  saveVendas(d)     { localStorage.setItem('ap2_vendas', JSON.stringify(d)); },
+  getMovEstoque()   { return JSON.parse(localStorage.getItem('ap2_mov') || '[]'); },
+  saveMovEstoque(d) { localStorage.setItem('ap2_mov', JSON.stringify(d)); },
+  clearAll() {
+    ['ap2_insumos','ap2_produtos','ap2_vendas','ap2_mov'].forEach(k => localStorage.removeItem(k));
+  }
+};
+
+const App = {
+  insumos: [], produtos: [], vendas: [], movEstoque: [],
+  composicaoTemp: [], paginaAtual: 'dashboard', filtroEstoque: 'todos',
+};
+
+function gerarId() { return '_'+Math.random().toString(36).substr(2,9)+Date.now().toString(36); }
+function fBRL(v) { return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0); }
+function fNum(v,d=3) { return parseFloat((v||0).toFixed(d)); }
+function fDT(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+function bCat(cat) {
+  const m = {fruta:'Fruta/Polpa',laticinios:'Laticínios',complemento:'Complemento',embalagem:'Embalagem',outros:'Outros'};
+  return `<span class="tag tag-${cat}">${m[cat]||cat}</span>`;
+}
+function bMov(t) {
+  const m = {entrada:['tag-green','Entrada'],ajuste_mais:['tag-blue','Ajuste +'],ajuste_menos:['tag-orange','Ajuste −'],perda:['tag-red','Perda'],venda:['tag-coral','Venda'],producao:['tag-green','Produção'],consumo_producao:['tag-orange','Consumo'],estorno_producao_saida:['tag-red','Estorno'],estorno_producao_entrada:['tag-green','Retorno']};
+  const [cl,lb] = m[t]||['tag-outros',t];
+  return `<span class="tag ${cl}">${lb}</span>`;
+}
+function bCanal(c) {
+  const m = {balcao:'Balcão',delivery:'Delivery',ifood:'iFood/Rappi',whatsapp:'WhatsApp',outro:'Outro'};
+  return `<span class="tag tag-canal">${m[c]||c}</span>`;
+}
+function stEstoque(ins) {
+  const a = ins.estoqueAtual||0, m = ins.estoqueMinimo||0;
+  if(a<=0) return {cls:'status-zerado',label:'Zerado'};
+  if(m>0&&a<=m) return {cls:'status-alerta',label:'Alerta'};
+  return {cls:'status-ok',label:'OK'};
+}
+function stEstoqueProd(p) {
+  const a = p.estoqueAtual||0, m = p.estoqueMinimo||0;
+  if(a<=0) return {cls:'status-zerado',label:'Zerado'};
+  if(m>0&&a<=m) return {cls:'status-alerta',label:'Alerta'};
+  return {cls:'status-ok',label:'OK'};
+}
+function unidadeProd(p) { return parsRend(p.volume).unidade||p.rendimentoUnidade||'un'; }
+function valorEstProd(p) {
+  const c = calcProd(p), r = parsRend(p.volume);
+  const base = (Number.isFinite(r.quantidade)&&r.quantidade>0)?r.quantidade:1;
+  return ((p.estoqueAtual||0)/base)*(Number.isFinite(c.custoTotal)?c.custoTotal:0);
+}
+function parsRend(vol) {
+  const t = String(vol||'').trim();
+  if(!t) return {quantidade:NaN,unidade:'un',texto:''};
+  const m = t.match(/^([0-9]+(?:[.,][0-9]+)?)\s*([a-zA-ZÀ-ÿ]+)?$/);
+  if(!m) return {quantidade:NaN,unidade:'un',texto:t};
+  const q = parseFloat(m[1].replace(',','.'))||1;
+  const ub = (m[2]||'un').toLowerCase();
+  const map = {litro:'l',litros:'l',l:'l',ml:'ml',mililitro:'ml',mililitros:'ml',g:'g',grama:'g',gramas:'g',kg:'kg',quilo:'kg',quilos:'kg',unidade:'un',unidades:'un',un:'un'};
+  return {quantidade:q,unidade:map[ub]||ub||'un',texto:t};
+}
+function famUnid(u) {
+  u = String(u||'').toLowerCase();
+  if(['g','kg'].includes(u)) return 'massa';
+  if(['ml','l'].includes(u)) return 'volume';
+  if(u==='un') return 'unidade';
+  return 'outra';
+}
+function convQtd(v,de,para) {
+  const q = parseFloat(v); if(!Number.isFinite(q)) return NaN;
+  de=String(de||'').toLowerCase(); para=String(para||'').toLowerCase();
+  if(!de||!para) return NaN; if(de===para) return q;
+  if(famUnid(de)!==famUnid(para)) return NaN;
+  const b={g:1,kg:1000,ml:1,l:1000,un:1};
+  if(!b[de]||!b[para]) return NaN;
+  return q*(b[de]/b[para]);
+}
+function normItem(io) {
+  if(!io) return null;
+  const qtd = parseFloat(io.quantidade)||0;
+  const unid = String(io.unidade||io.qtdUnidade||'').toLowerCase();
+  if(io.tipo&&io.itemId) return {tipo:io.tipo,itemId:io.itemId,quantidade:qtd,unidade:unid};
+  if(io.insumoId) return {tipo:'insumo',itemId:io.insumoId,quantidade:qtd,unidade:unid};
+  if(io.produtoId) return {tipo:'produto',itemId:io.produtoId,quantidade:qtd,unidade:unid};
+  return null;
+}
+function getComp(item) {
+  if(!item) return null;
+  if(item.tipo==='produto') return App.produtos.find(p=>p.id===item.itemId)||null;
+  return App.insumos.find(i=>i.id===item.itemId)||null;
+}
+function getUnidComp(item) {
+  const c = getComp(item); if(!c) return '—';
+  return item.tipo==='produto'?item.unidade||parsRend(c.volume).unidade||'un':(c.unidade||'un');
+}
+function getCustoUnitComp(item, vis=new Set()) {
+  const c = getComp(item); if(!c) return 0;
+  if(item.tipo==='produto') {
+    const calc = calcProd(c,vis); if(calc.ciclo) return NaN;
+    const r = parsRend(c.volume); const base = r.quantidade>0?r.quantidade:NaN;
+    if(!Number.isFinite(base)) return NaN;
+    const fator = convQtd(1,r.unidade||'un',item.unidade||r.unidade||'un');
+    if(!Number.isFinite(fator)||fator<=0) return NaN;
+    return (calc.custoTotal/base)/fator;
+  }
+  return c.custoUnitario||0;
+}
+function labelComp(item) { return item.tipo==='produto'?'Produto':'Insumo'; }
+function tipoAlvoMov(m) { return m.alvoTipo||(m.produtoId?'produto':'insumo'); }
+
+let toastTimer = null;
+function showToast(msg, tipo='success') {
+  const el=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  el.classList.remove('hidden','error','warning');
+  if(tipo==='error') el.classList.add('error');
+  if(tipo==='warning') el.classList.add('warning');
+  el.style.animation='none'; el.offsetHeight; el.style.animation='';
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.add('hidden'),3500);
+}
+
+function confirmar(titulo, msg) {
+  return new Promise(resolve => {
+    document.getElementById('modalTitle').textContent=titulo;
+    document.getElementById('modalMessage').textContent=msg;
+    document.getElementById('modalConfirm').classList.remove('hidden');
+    const ok=document.getElementById('modalConfirmBtn'), cancel=document.getElementById('modalCancel');
+    function cleanup(r) { document.getElementById('modalConfirm').classList.add('hidden'); ok.removeEventListener('click',onOk); cancel.removeEventListener('click',onCancel); resolve(r); }
+    function onOk(){cleanup(true);} function onCancel(){cleanup(false);}
+    ok.addEventListener('click',onOk); cancel.addEventListener('click',onCancel);
+  });
+}
+
+function calcProd(produto, vis=new Set()) {
+  if(!produto) return {custoInsumos:0,despesas:0,custoTotal:0,margem:0,precoSugerido:0,lucro:0,ciclo:false};
+  if(vis.has(produto.id)) return {custoInsumos:0,despesas:0,custoTotal:0,margem:0,precoSugerido:0,lucro:0,ciclo:true};
+  const prox=new Set(vis); prox.add(produto.id);
+  const ci = (produto.composicao||[]).reduce((acc,io)=>{
+    const it=normItem(io); if(!it||it.quantidade<=0) return acc;
+    const c=getComp(it); if(!c) return acc;
+    if(it.tipo==='produto') {
+      const calc=calcProd(c,prox); if(calc.ciclo) return NaN;
+      const r=parsRend(c.volume); const base=r.quantidade>0?r.quantidade:NaN;
+      if(!Number.isFinite(base)) return NaN;
+      const fator=convQtd(1,r.unidade||'un',it.unidade||r.unidade||'un');
+      if(!Number.isFinite(fator)||fator<=0) return NaN;
+      return acc+((calc.custoTotal/base)/fator)*it.quantidade;
+    }
+    return acc+((c.custoUnitario||0)*it.quantidade);
+  },0);
+  if(Number.isNaN(ci)) return {custoInsumos:0,despesas:0,custoTotal:0,margem:0,precoSugerido:0,lucro:0,ciclo:true};
+  const desp=parseFloat(produto.despesas||0);
+  const ct=ci+desp, marg=Math.max(0,parseFloat(produto.margem||0)), mk=marg/100;
+  return {custoInsumos:ci,despesas:desp,custoTotal:ct,margem:produto.margem,precoSugerido:ct*(1+mk),lucro:ct*mk,ciclo:false};
+}
+
+function registrarMov({insumoId=null,produtoId=null,alvoTipo=null,itemId=null,tipo,quantidade,custo,saldoApos,observacao}) {
+  const tAlvo=alvoTipo||(produtoId?'produto':'insumo');
+  const rId=itemId||insumoId||produtoId||null;
+  App.movEstoque.push({id:gerarId(),alvoTipo:tAlvo,itemId:rId,insumoId:tAlvo==='insumo'?rId:insumoId,produtoId:tAlvo==='produto'?rId:produtoId,tipo,quantidade,custo:custo||null,saldoApos,observacao:observacao||'',data:new Date().toISOString()});
+  Storage.saveMovEstoque(App.movEstoque);
+}
+
+function itensAlerta() {
+  return [
+    ...App.insumos.filter(i=>{ const s=stEstoque(i); return s.label==='Alerta'||s.label==='Zerado'; }).map(i=>({...i,tipoItem:'insumo'})),
+    ...App.produtos.filter(p=>{ const s=stEstoqueProd(p); return s.label==='Alerta'||s.label==='Zerado'; }).map(p=>({...p,tipoItem:'produto'}))
+  ];
+}
+function atualizarBadge() {
+  const a=itensAlerta(), b=document.getElementById('badgeEstoque');
+  if(a.length>0){ b.classList.remove('hidden'); b.textContent=a.length; }
+  else b.classList.add('hidden');
+}
+
+function navegarPara(pag) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn,.step-item').forEach(b=>b.classList.remove('active'));
+  const el=document.getElementById(`page-${pag}`); if(el) el.classList.add('active');
+  document.querySelectorAll(`[data-page="${pag}"]`).forEach(b=>b.classList.add('active'));
+  App.paginaAtual=pag;
+  document.getElementById('sidebar').classList.remove('open');
+  const stepMap = {'insumos':'sideStep1','produtos':'sideStep2','estoque':'sideStep3','vendas-reais':'sideStep4'};
+  if(stepMap[pag]) document.getElementById(stepMap[pag]).classList.add('active');
+  if(pag==='dashboard') renderDashboard();
+  if(pag==='insumos') renderInsumos();
+  if(pag==='estoque') renderEstoque();
+  if(pag==='calculos') renderCalculos();
+  if(pag==='simulacao') renderSimulacao();
+  if(pag==='vendas-reais') renderVendasReais();
+}
+
+// ============ DASHBOARD ============
+function renderDashboard() {
+  const hoje=new Date().toDateString();
+  const vh=App.vendas.filter(v=>new Date(v.data).toDateString()===hoje);
+  const fat=vh.reduce((a,v)=>a+v.totalFinal,0), luc=vh.reduce((a,v)=>a+v.lucro,0);
+  const alertas=itensAlerta();
+  document.getElementById('statsGrid').innerHTML=`
+    <div class="stat-card" style="--accent:var(--acai-2)"><div class="stat-label">Insumos</div><div class="stat-value">${App.insumos.length}</div><div class="stat-sub">cadastrados</div></div>
+    <div class="stat-card" style="--accent:var(--green)"><div class="stat-label">Produtos</div><div class="stat-value">${App.produtos.length}</div><div class="stat-sub">no catálogo</div></div>
+    <div class="stat-card" style="--accent:var(--green)"><div class="stat-label">Faturamento Hoje</div><div class="stat-value" style="font-size:1.25rem">${fBRL(fat)}</div><div class="stat-sub">${vh.length} venda(s) · Lucro ${fBRL(luc)}</div></div>
+    <div class="stat-card" style="--accent:${alertas.length>0?'var(--coral)':'#3b82f6'}"><div class="stat-label">Alertas</div><div class="stat-value" style="color:${alertas.length>0?'var(--coral)':'inherit'}">${alertas.length}</div><div class="stat-sub">${alertas.length>0?'itens em alerta':'estoque ok'}</div></div>
+  `;
+  const ad=document.getElementById('alertasEstoque');
+  if(alertas.length>0){
+    ad.innerHTML=`<div class="alert-banner">⚠ <strong>Estoque crítico:</strong>${alertas.map(i=>`<span class="alert-chip">${i.nome} (${fNum(i.estoqueAtual,2)} ${i.tipoItem==='produto'?unidadeProd(i):i.unidade})</span>`).join('')}<button class="btn-sm" data-page="estoque" style="margin-left:auto">Ver →</button></div>`;
+  } else { ad.innerHTML=''; }
+  const prods=document.getElementById('dashProdutos');
+  prods.innerHTML=App.produtos.length?App.produtos.map(p=>{const c=calcProd(p);return`<div class="dash-item" onclick="verCalculo('${p.id}')"><span class="di-name">${p.nome}${p.volume?` <small>(${p.volume})</small>`:''}</span><span class="di-val">${fBRL(c.precoSugerido)}</span></div>`;}).join(''):'<p class="empty-dash">Nenhum produto.</p>';
+  const dse=document.getElementById('dashEstoqueCritico');
+  dse.innerHTML=alertas.length?alertas.slice(0,5).map(i=>{const st=stEstoque(i),u=i.tipoItem==='produto'?unidadeProd(i):i.unidade;return`<div class="dash-item"><span class="di-name">${i.nome}</span><span class="di-val"><span class="status-badge ${st.cls}">${fNum(i.estoqueAtual,2)} ${u}</span></span></div>`;}).join(''):'<p class="empty-dash" style="color:var(--green)">✓ Todos os itens ok.</p>';
+  const uv=document.getElementById('dashUltimasVendas');
+  const ultV=[...App.vendas].sort((a,b)=>new Date(b.data)-new Date(a.data)).slice(0,5);
+  uv.innerHTML=ultV.length?ultV.map(v=>`<div class="dash-item"><span class="di-name">${v.produtoNome} <small>×${v.quantidade}</small></span><span class="di-val">${fBRL(v.totalFinal)}</span></div>`).join(''):'<p class="empty-dash">Nenhuma venda ainda.</p>';
+  const di=document.getElementById('dashInsumos');
+  const si=[...App.insumos].sort((a,b)=>b.custoUnitario-a.custoUnitario).slice(0,5);
+  di.innerHTML=si.length?si.map(i=>`<div class="dash-item"><span class="di-name">${i.nome}</span><span class="di-val">${fBRL(i.custoUnitario)}/${i.unidade}</span></div>`).join(''):'<p class="empty-dash">Nenhum insumo.</p>';
+  // Update flow guide
+  document.querySelectorAll('#flowGuide .flow-step').forEach((el,i)=>{
+    el.classList.remove('done','active');
+    if(App.insumos.length>0&&i===0) el.classList.add('done');
+    if(App.produtos.length>0&&i===1) el.classList.add('done');
+  });
+  atualizarBadge();
+}
+
+// ============ INSUMOS ============
+function renderInsumos(filtro='',cat='') {
+  let lista=App.insumos;
+  if(filtro) lista=lista.filter(i=>i.nome.toLowerCase().includes(filtro.toLowerCase()));
+  if(cat) lista=lista.filter(i=>i.categoria===cat);
+  document.getElementById('totalInsumos').textContent=App.insumos.length;
+  const tbody=document.getElementById('tbodyInsumos');
+  if(!lista.length){tbody.innerHTML=`<tr class="empty-row"><td colspan="8">Nenhum insumo encontrado.</td></tr>`;return;}
+  tbody.innerHTML=lista.map(ins=>{const st=stEstoque(ins);return`
+    <tr>
+      <td><strong style="color:var(--text)">${ins.nome}</strong></td>
+      <td>${bCat(ins.categoria)}</td>
+      <td style="color:var(--green);font-weight:700">${fBRL(ins.custoUnitario)}/${ins.unidade}</td>
+      <td><strong>${fNum(ins.estoqueAtual||0,2)} ${ins.unidade}</strong></td>
+      <td>${ins.estoqueMinimo>0?fNum(ins.estoqueMinimo,2)+' '+ins.unidade:'—'}</td>
+      <td><span class="status-badge ${st.cls}">${st.label}</span></td>
+      <td style="color:var(--text-3);font-size:.81rem">${ins.fornecedor||'—'}</td>
+      <td><div style="display:flex;gap:5px"><button class="btn-edit" onclick="editarInsumo('${ins.id}')">✎ Editar</button><button class="btn-sm" onclick="abrirAjusteEstoque('${ins.id}')">📦</button><button class="btn-del" onclick="excluirInsumo('${ins.id}')">✕</button></div></td>
+    </tr>`;}).join('');
+}
+
+function editarInsumo(id) {
+  const ins=App.insumos.find(i=>i.id===id); if(!ins) return;
+  document.getElementById('insumoId').value=ins.id;
+  document.getElementById('insumoNome').value=ins.nome;
+  document.getElementById('insumoCategoria').value=ins.categoria;
+  document.getElementById('insumoUnidade').value=ins.unidade;
+  document.getElementById('insumoQtd').value=ins.qtdComprada;
+  document.getElementById('insumoPreco').value=ins.precoPago;
+  document.getElementById('insumoCustoUnitario').value=`${fBRL(ins.custoUnitario)}/${ins.unidade}`;
+  document.getElementById('insumoEstoqueAtual').value=ins.estoqueAtual||0;
+  document.getElementById('insumoEstoqueMinimo').value=ins.estoqueMinimo||0;
+  document.getElementById('insumoEstoqueUnidade').value=ins.unidade;
+  document.getElementById('insumoFornecedor').value=ins.fornecedor||'';
+  document.getElementById('formInsumoTitulo').textContent='✎ Editar Insumo';
+  document.getElementById('formInsumoBody').classList.remove('hidden');
+  document.getElementById('btnToggleFormInsumo').textContent='−';
+  document.getElementById('formInsumoCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+async function excluirInsumo(id) {
+  const ins=App.insumos.find(i=>i.id===id); if(!ins) return;
+  const ok=await confirmar('Excluir Insumo',`Excluir "${ins.nome}"?`); if(!ok) return;
+  App.insumos=App.insumos.filter(i=>i.id!==id); Storage.saveInsumos(App.insumos);
+  renderInsumos(); atualizarSelectInsumos(); atualizarBadge();
+  showToast(`"${ins.nome}" excluído.`);
+}
+
+function resetFormInsumo() {
+  document.getElementById('formInsumo').reset();
+  document.getElementById('insumoId').value='';
+  document.getElementById('insumoCustoUnitario').value='';
+  document.getElementById('insumoEstoqueUnidade').value='';
+  document.getElementById('formInsumoTitulo').textContent='➕ Novo Insumo';
+}
+
+function calcCustoUnit() {
+  const qtd=parseFloat(document.getElementById('insumoQtd').value)||0;
+  const preco=parseFloat(document.getElementById('insumoPreco').value)||0;
+  const unid=document.getElementById('insumoUnidade').value;
+  document.getElementById('insumoCustoUnitario').value=qtd>0?`${fBRL(preco/qtd)}/${unid}`:'';
+  document.getElementById('insumoEstoqueUnidade').value=unid;
+}
+
+document.getElementById('formInsumo').addEventListener('submit',function(e){
+  e.preventDefault();
+  const id=document.getElementById('insumoId').value;
+  const nome=document.getElementById('insumoNome').value.trim();
+  const cat=document.getElementById('insumoCategoria').value;
+  const unid=document.getElementById('insumoUnidade').value;
+  const qtd=parseFloat(document.getElementById('insumoQtd').value);
+  const preco=parseFloat(document.getElementById('insumoPreco').value);
+  const ea=parseFloat(document.getElementById('insumoEstoqueAtual').value)||0;
+  const em=parseFloat(document.getElementById('insumoEstoqueMinimo').value)||0;
+  const forn=document.getElementById('insumoFornecedor').value.trim();
+  if(!nome||isNaN(qtd)||isNaN(preco)||qtd<=0||preco<=0){showToast('Preencha todos os campos obrigatórios.','error');return;}
+  const cu=preco/qtd;
+  if(id){
+    const idx=App.insumos.findIndex(i=>i.id===id);
+    if(idx!==-1){
+      const antes=App.insumos[idx].estoqueAtual||0;
+      App.insumos[idx]={...App.insumos[idx],nome,categoria:cat,unidade:unid,qtdComprada:qtd,precoPago:preco,custoUnitario:cu,estoqueAtual:ea,estoqueMinimo:em,fornecedor:forn};
+      if(antes!==ea) registrarMov({insumoId:id,tipo:ea>=antes?'ajuste_mais':'ajuste_menos',quantidade:Math.abs(ea-antes),saldoApos:ea,observacao:'Ajuste via edição'});
+    }
+    showToast(`"${nome}" atualizado!`);
+  } else {
+    const nid=gerarId();
+    App.insumos.push({id:nid,nome,categoria:cat,unidade:unid,qtdComprada:qtd,precoPago:preco,custoUnitario:cu,estoqueAtual:ea,estoqueMinimo:em,fornecedor:forn});
+    if(ea>0) registrarMov({insumoId:nid,tipo:'entrada',quantidade:ea,custo:preco,saldoApos:ea,observacao:'Estoque inicial'});
+    showToast(`"${nome}" cadastrado!`);
+  }
+  Storage.saveInsumos(App.insumos);
+  resetFormInsumo();
+  renderInsumos();
+  atualizarSelectInsumos();
+  atualizarBadge();
+});
+
+let ajusteId=null;
+function abrirAjusteEstoque(id) {
+  const ins=App.insumos.find(i=>i.id===id); if(!ins) return;
+  ajusteId=id;
+  document.getElementById('modalAjusteNome').textContent=`${ins.nome} — atual: ${fNum(ins.estoqueAtual||0,2)} ${ins.unidade}`;
+  document.getElementById('inputAjusteEstoque').value=ins.estoqueAtual||0;
+  document.getElementById('modalAjusteEstoque').classList.remove('hidden');
+}
+document.getElementById('btnConfirmarAjuste').addEventListener('click',()=>{
+  const ins=App.insumos.find(i=>i.id===ajusteId); if(!ins) return;
+  const novo=parseFloat(document.getElementById('inputAjusteEstoque').value);
+  if(isNaN(novo)||novo<0){showToast('Valor inválido.','error');return;}
+  const antes=ins.estoqueAtual||0; ins.estoqueAtual=novo;
+  registrarMov({insumoId:ajusteId,tipo:novo>=antes?'ajuste_mais':'ajuste_menos',quantidade:Math.abs(novo-antes),saldoApos:novo,observacao:'Ajuste manual'});
+  Storage.saveInsumos(App.insumos);
+  document.getElementById('modalAjusteEstoque').classList.add('hidden');
+  renderInsumos(); if(App.paginaAtual==='estoque') renderEstoque(); atualizarBadge();
+  showToast(`Estoque de "${ins.nome}" atualizado!`);
+});
+document.getElementById('btnCancelarAjuste').addEventListener('click',()=>document.getElementById('modalAjusteEstoque').classList.add('hidden'));
+
+// ============ ESTOQUE ============
+let filtroEstoqueAtivo='todos';
+function filtrarEstoque(t) {
+  filtroEstoqueAtivo=t;
+  document.querySelectorAll('#page-estoque .btn-sm').forEach(b=>b.classList.remove('active'));
+  const mp={todos:'filtroTodosEstoque',alerta:'filtroAlertaEstoque',zerado:'filtroZeradoEstoque'};
+  const el=document.getElementById(mp[t]); if(el) el.classList.add('active');
+  renderTabelaEstoque();
+}
+
+function renderEstoque() {
+  const ea=itensAlerta().length;
+  const ez=[...App.insumos.filter(i=>stEstoque(i).label==='Zerado'),...App.produtos.filter(p=>stEstoqueProd(p).label==='Zerado')].length;
+  const vti=App.insumos.reduce((a,i)=>a+((i.estoqueAtual||0)*(i.custoUnitario||0)),0);
+  const vtp=App.produtos.reduce((a,p)=>a+valorEstProd(p),0);
+  document.getElementById('statsEstoque').innerHTML=`
+    <div class="stat-card" style="--accent:var(--acai-2)"><div class="stat-label">Insumos</div><div class="stat-value">${App.insumos.length}</div><div class="stat-sub">cadastrados</div></div>
+    <div class="stat-card" style="--accent:var(--green)"><div class="stat-label">Produtos</div><div class="stat-value">${App.produtos.length}</div><div class="stat-sub">acabados</div></div>
+    <div class="stat-card" style="--accent:${ea>0?'var(--coral)':'var(--green)'}"><div class="stat-label">Em Alerta</div><div class="stat-value" style="color:${ea>0?'var(--coral)':'inherit'}">${ea}</div><div class="stat-sub">abaixo do mínimo</div></div>
+    <div class="stat-card" style="--accent:${ez>0?'#dc2626':'var(--green)'}"><div class="stat-label">Zerados</div><div class="stat-value" style="color:${ez>0?'#dc2626':'inherit'}">${ez}</div><div class="stat-sub">sem estoque</div></div>
+    <div class="stat-card" style="--accent:#3b82f6"><div class="stat-label">Valor em Estoque</div><div class="stat-value" style="font-size:1.25rem">${fBRL(vti+vtp)}</div><div class="stat-sub">custo total</div></div>
+  `;
+  atualizarSelectMovInsumo(); atualizarSelectProducao();
+  renderTabelaEstoque(); renderTabelaProdutosEstoque(); renderHistMov();
+}
+
+function renderTabelaEstoque() {
+  const tbody=document.getElementById('tbodyEstoque');
+  let lista=App.insumos;
+  if(filtroEstoqueAtivo==='alerta') lista=lista.filter(i=>stEstoque(i).label==='Alerta');
+  if(filtroEstoqueAtivo==='zerado') lista=lista.filter(i=>stEstoque(i).label==='Zerado');
+  if(!lista.length){tbody.innerHTML=`<tr class="empty-row"><td colspan="8">Nenhum insumo neste filtro.</td></tr>`;return;}
+  tbody.innerHTML=lista.map(ins=>{const st=stEstoque(ins),ve=(ins.estoqueAtual||0)*(ins.custoUnitario||0);return`
+    <tr><td><strong>${ins.nome}</strong></td><td>${bCat(ins.categoria)}</td>
+    <td><strong>${fNum(ins.estoqueAtual||0,2)} ${ins.unidade}</strong></td>
+    <td>${ins.estoqueMinimo>0?fNum(ins.estoqueMinimo,2)+' '+ins.unidade:'—'}</td>
+    <td><span class="status-badge ${st.cls}">${st.label}</span></td>
+    <td>${fBRL(ins.custoUnitario)}/${ins.unidade}</td>
+    <td style="font-weight:700">${fBRL(ve)}</td>
+    <td><button class="btn-sm" onclick="abrirAjusteEstoque('${ins.id}')">📦 Ajustar</button></td></tr>`;}).join('');
+}
+
+function renderTabelaProdutosEstoque() {
+  const tbody=document.getElementById('tbodyProdutosEstoque');
+  if(!App.produtos.length){tbody.innerHTML=`<tr class="empty-row"><td colspan="7">Nenhum produto cadastrado.</td></tr>`;return;}
+  tbody.innerHTML=App.produtos.map(p=>{const st=stEstoqueProd(p),cu=calcProd(p).custoTotal||0,ve=valorEstProd(p),un=unidadeProd(p);return`
+    <tr><td><strong>${p.nome}</strong>${p.volume?` <span class="tag tag-canal">${p.volume}</span>`:''}</td>
+    <td><strong>${fNum(p.estoqueAtual||0,2)} ${un}</strong></td>
+    <td>${p.estoqueMinimo>0?fNum(p.estoqueMinimo,2)+' '+un:'—'}</td>
+    <td><span class="status-badge ${st.cls}">${st.label}</span></td>
+    <td>${fBRL(cu)}/${un}</td><td style="font-weight:700">${fBRL(ve)}</td>
+    <td><div style="display:flex;gap:5px"><button class="btn-sm" onclick="abrirProducao('${p.id}')">📋 Produzir</button><button class="btn-outline-danger" onclick="abrirEstorno('${p.id}')">↩ Estornar</button></div></td></tr>`;}).join('');
+}
+
+function renderHistMov() {
+  const tbody=document.getElementById('tbodyHistMov');
+  const movs=[...App.movEstoque].sort((a,b)=>new Date(b.data)-new Date(a.data)).slice(0,100);
+  if(!movs.length){tbody.innerHTML=`<tr class="empty-row"><td colspan="7">Nenhuma movimentação.</td></tr>`;return;}
+  tbody.innerHTML=movs.map(m=>{
+    const at=tipoAlvoMov(m);
+    const item=at==='produto'?App.produtos.find(p=>p.id===(m.itemId||m.produtoId)):App.insumos.find(i=>i.id===(m.itemId||m.insumoId));
+    const nome=item?item.nome:(at==='produto'?'Prod. removido':'Ins. removido');
+    const un=item?(at==='produto'?unidadeProd(item):item.unidade):'';
+    const pos=['entrada','ajuste_mais','producao','estorno_producao_entrada'].includes(m.tipo);
+    return`<tr><td style="white-space:nowrap;font-size:.81rem">${fDT(m.data)}</td><td>${nome}</td><td>${bMov(m.tipo)}</td>
+    <td style="font-weight:700;color:${pos?'var(--green)':'var(--coral)'}">${pos?'+':'−'}${fNum(m.quantidade,2)} ${un}</td>
+    <td>${m.custo?fBRL(m.custo):'—'}</td><td>${fNum(m.saldoApos||0,2)} ${un}</td>
+    <td style="font-size:.81rem;color:var(--text-3)">${m.observacao||'—'}</td></tr>`;}).join('');
+}
+
+function atualizarSelectMovInsumo() {
+  const sel=document.getElementById('movInsumo'), val=sel.value;
+  sel.innerHTML='<option value="">Selecione um insumo...</option>';
+  App.insumos.forEach(ins=>{const o=document.createElement('option');o.value=ins.id;o.textContent=`${ins.nome} (${fNum(ins.estoqueAtual||0,2)} ${ins.unidade})`;sel.appendChild(o);});
+  sel.value=val;
+}
+function atualizarSelectProducao() {
+  const sel=document.getElementById('producaoProduto'); if(!sel) return;
+  const val=sel.value; sel.innerHTML='<option value="">Selecione um produto...</option>';
+  App.produtos.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=`${p.nome}${p.volume?` (${p.volume})`:''} — estq: ${fNum(p.estoqueAtual||0,2)} ${unidadeProd(p)}`;sel.appendChild(o);});
+  sel.value=val; atualizarUnidProducao();
+}
+function atualizarUnidProducao() {
+  const sp=document.getElementById('producaoProduto'), su=document.getElementById('producaoQuantidadeUnidade');
+  if(!sp||!su) return;
+  const p=App.produtos.find(x=>x.id===sp.value); if(p) su.value=unidadeProd(p);
+}
+
+document.getElementById('btnRegistrarMov').addEventListener('click',()=>{
+  const iid=document.getElementById('movInsumo').value, tipo=document.getElementById('movTipo').value;
+  const qtd=parseFloat(document.getElementById('movQuantidade').value);
+  const custo=parseFloat(document.getElementById('movCusto').value)||null;
+  const obs=document.getElementById('movObservacao').value.trim();
+  if(!iid){showToast('Selecione um insumo.','error');return;}
+  if(!qtd||qtd<=0){showToast('Informe uma quantidade válida.','error');return;}
+  const idx=App.insumos.findIndex(i=>i.id===iid); if(idx===-1) return;
+  const ins=App.insumos[idx]; let ne=ins.estoqueAtual||0;
+  if(tipo==='entrada'||tipo==='ajuste_mais') ne+=qtd; else ne=Math.max(0,ne-qtd);
+  if(tipo==='entrada'&&custo&&custo>0&&qtd>0){App.insumos[idx].custoUnitario=custo/qtd;App.insumos[idx].precoPago=custo;App.insumos[idx].qtdComprada=qtd;}
+  App.insumos[idx].estoqueAtual=ne;
+  registrarMov({insumoId:iid,tipo,quantidade:qtd,custo,saldoApos:ne,observacao:obs});
+  Storage.saveInsumos(App.insumos);
+  ['movInsumo','movQuantidade','movCusto','movObservacao'].forEach(i=>{const el=document.getElementById(i);if(el) el.value='';});
+  renderEstoque(); atualizarBadge();
+  showToast(`Movimentação registrada! Estoque: ${fNum(ne,2)} ${ins.unidade}`);
+});
+document.getElementById('btnRegistrarProducao').addEventListener('click',registrarProducao);
+document.getElementById('producaoProduto').addEventListener('change',atualizarUnidProducao);
+
+function calcFatorProd(p,qBase) {
+  const r=parsRend(p.volume); if(!Number.isFinite(r.quantidade)||r.quantidade<=0) return NaN;
+  return qBase/r.quantidade;
+}
+function verificarEstoqueProducao(p,fator) {
+  const avisos=[]; for(const io of (p.composicao||[])){const it=normItem(io);if(!it||it.quantidade<=0) continue;const comp=getComp(it);if(!comp) continue;const nec=it.quantidade*fator,disp=comp.estoqueAtual||0;if(disp<nec) avisos.push({nome:comp.nome,disp,nec,un:it.tipo==='produto'?unidadeProd(comp):(comp.unidade||'un')});}
+  return avisos;
+}
+function consumirParaProducao(p,fator,pid) {
+  for(const io of (p.composicao||[])){const it=normItem(io);if(!it||it.quantidade<=0) continue;const qtdUso=it.quantidade*fator;
+    if(it.tipo==='insumo'){const idx=App.insumos.findIndex(i=>i.id===it.itemId);if(idx===-1) continue;const a=App.insumos[idx].estoqueAtual||0;App.insumos[idx].estoqueAtual=Math.max(0,a-qtdUso);registrarMov({alvoTipo:'insumo',itemId:it.itemId,tipo:'consumo_producao',quantidade:qtdUso,saldoApos:App.insumos[idx].estoqueAtual,observacao:`Produção de ${p.nome} (ref:${pid})`});}
+    else{const idx=App.produtos.findIndex(x=>x.id===it.itemId);if(idx===-1) continue;const a=App.produtos[idx].estoqueAtual||0;App.produtos[idx].estoqueAtual=Math.max(0,a-qtdUso);registrarMov({alvoTipo:'produto',itemId:it.itemId,tipo:'consumo_producao',quantidade:qtdUso,saldoApos:App.produtos[idx].estoqueAtual,observacao:`Uso em ${p.nome} (ref:${pid})`});}
+  }
+}
+async function registrarProducao() {
+  const pid=document.getElementById('producaoProduto').value, qtd=parseFloat(document.getElementById('producaoQuantidade').value)||0, unidE=document.getElementById('producaoQuantidadeUnidade').value, obs=document.getElementById('producaoObservacao').value.trim();
+  if(!pid){showToast('Selecione um produto.','error');return;}
+  if(qtd<=0){showToast('Informe quantidade.','error');return;}
+  const p=App.produtos.find(x=>x.id===pid); if(!p) return;
+  const ub=unidadeProd(p), qb=convQtd(qtd,unidE,ub);
+  if(!Number.isFinite(qb)||qb<=0){showToast(`Unidade incompatível com ${ub}.`,'error');return;}
+  const fator=calcFatorProd(p,qb);
+  if(!Number.isFinite(fator)||fator<=0){showToast('Não foi possível calcular o lote.','error');return;}
+  const avisos=verificarEstoqueProducao(p,fator);
+  if(avisos.length>0){showToast(`Estoque insuficiente: ${avisos.map(a=>`${a.nome} (tem ${fNum(a.disp,2)}, precisa ${fNum(a.nec,2)} ${a.un})`).join(', ')}`,'error');return;}
+  const producaoId=gerarId();
+  consumirParaProducao(p,fator,producaoId);
+  const idx=App.produtos.findIndex(x=>x.id===pid);
+  App.produtos[idx].estoqueAtual=(App.produtos[idx].estoqueAtual||0)+qb;
+  registrarMov({alvoTipo:'produto',itemId:pid,tipo:'producao',quantidade:qb,saldoApos:App.produtos[idx].estoqueAtual,observacao:obs||`Produção de ${p.nome}`});
+  Storage.saveInsumos(App.insumos); Storage.saveProdutos(App.produtos);
+  document.getElementById('producaoProduto').value=''; document.getElementById('producaoQuantidade').value=''; document.getElementById('producaoObservacao').value='';
+  renderEstoque(); renderProdutos(); atualizarSelectVendas(); atualizarBadge();
+  showToast(`Produção registrada! ${p.nome} +${fNum(qb,2)} ${ub}`);
+}
+function abrirProducao(id) {
+  navegarPara('estoque');
+  const sel=document.getElementById('producaoProduto');
+  if(sel){sel.value=id;sel.dispatchEvent(new Event('change'));}
+  atualizarUnidProducao();
+  const q=document.getElementById('producaoQuantidade'); if(q) q.focus();
+}
+let estornoId=null;
+function abrirEstorno(id) {
+  const p=App.produtos.find(x=>x.id===id); if(!p) return;
+  estornoId=id;
+  document.getElementById('modalEstornoNome').textContent=`${p.nome} — atual: ${fNum(p.estoqueAtual||0,2)} ${unidadeProd(p)}`;
+  document.getElementById('inputEstornoQuantidade').value='';
+  document.getElementById('inputEstornoUnidade').value=unidadeProd(p);
+  document.getElementById('inputEstornoMotivo').value='Produzido incorretamente';
+  document.getElementById('modalEstornoProducao').classList.remove('hidden');
+}
+function reabastecerEstorno(p,fator,eid) {
+  for(const io of (p.composicao||[])){const it=normItem(io);if(!it||it.quantidade<=0) continue;const qr=it.quantidade*fator;
+    if(it.tipo==='insumo'){const idx=App.insumos.findIndex(i=>i.id===it.itemId);if(idx===-1) continue;App.insumos[idx].estoqueAtual=(App.insumos[idx].estoqueAtual||0)+qr;registrarMov({alvoTipo:'insumo',itemId:it.itemId,tipo:'estorno_producao_entrada',quantidade:qr,saldoApos:App.insumos[idx].estoqueAtual,observacao:`Estorno de ${p.nome} (ref:${eid})`});}
+    else{const idx=App.produtos.findIndex(x=>x.id===it.itemId);if(idx===-1) continue;App.produtos[idx].estoqueAtual=(App.produtos[idx].estoqueAtual||0)+qr;registrarMov({alvoTipo:'produto',itemId:it.itemId,tipo:'estorno_producao_entrada',quantidade:qr,saldoApos:App.produtos[idx].estoqueAtual,observacao:`Retorno em ${p.nome} (ref:${eid})`});}
+  }
+}
+document.getElementById('btnConfirmarEstorno').addEventListener('click',()=>{
+  const p=App.produtos.find(x=>x.id===estornoId); if(!p) return;
+  const qtd=parseFloat(document.getElementById('inputEstornoQuantidade').value)||0;
+  const unid=document.getElementById('inputEstornoUnidade').value;
+  const motivo=document.getElementById('inputEstornoMotivo').value.trim();
+  if(qtd<=0){showToast('Informe quantidade.','error');return;}
+  const ub=unidadeProd(p), qb=convQtd(qtd,unid,ub);
+  if(!Number.isFinite(qb)||qb<=0){showToast(`Unidade incompatível com ${ub}.`,'error');return;}
+  if((p.estoqueAtual||0)<qb){showToast(`Estoque insuficiente. Atual: ${fNum(p.estoqueAtual||0,2)} ${ub}.`,'error');return;}
+  const fator=calcFatorProd(p,qb);
+  if(!Number.isFinite(fator)||fator<=0){showToast('Não foi possível calcular estorno.','error');return;}
+  const eid=gerarId(), idx=App.produtos.findIndex(x=>x.id===estornoId);
+  App.produtos[idx].estoqueAtual=(p.estoqueAtual||0)-qb;
+  registrarMov({alvoTipo:'produto',itemId:estornoId,tipo:'estorno_producao_saida',quantidade:qb,saldoApos:App.produtos[idx].estoqueAtual,observacao:motivo||`Estorno de ${p.nome}`});
+  reabastecerEstorno(p,fator,eid);
+  Storage.saveInsumos(App.insumos); Storage.saveProdutos(App.produtos);
+  document.getElementById('modalEstornoProducao').classList.add('hidden'); estornoId=null;
+  renderEstoque(); renderProdutos(); atualizarSelectVendas(); atualizarBadge();
+  showToast(`Estorno realizado: -${fNum(qb,2)} ${ub}`);
+});
+document.getElementById('btnCancelarEstorno').addEventListener('click',()=>{document.getElementById('modalEstornoProducao').classList.add('hidden');estornoId=null;});
+
+// ============ PRODUTOS ============
+function renderProdutos(filtro='') {
+  const c=document.getElementById('listaProdutos');
+  document.getElementById('totalProdutos').textContent=App.produtos.length;
+  let lista=filtro?App.produtos.filter(p=>p.nome.toLowerCase().includes(filtro.toLowerCase())):App.produtos;
+  if(!lista.length){c.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="ei">◎</div><p>Nenhum produto encontrado.</p></div>`;return;}
+  c.innerHTML=lista.map(p=>{const calc=calcProd(p),ct=calc.ciclo?'Inválido':fBRL(calc.custoTotal),ps=calc.ciclo?'—':fBRL(calc.precoSugerido),pv=p.precoVenda?fBRL(p.precoVenda):'—',st=stEstoqueProd(p),un=unidadeProd(p);
+  return`<div class="prod-card">
+    <div class="prod-card-top"><span class="prod-name">${p.nome}</span>${p.volume?`<span class="prod-vol">${p.volume}</span>`:''}</div>
+    <div class="prod-desc">${p.descricao||'&nbsp;'}</div>
+    <div class="prod-stats">
+      <div class="ps-item"><div class="ps-label">Custo Total</div><div class="ps-val ps-custo">${ct}</div></div>
+      <div class="ps-item"><div class="ps-label">Preço Sugerido</div><div class="ps-val ps-preco">${ps}</div></div>
+      <div class="ps-item"><div class="ps-label">Preço de Venda</div><div class="ps-val" style="color:var(--acai)">${pv}</div></div>
+      <div class="ps-item"><div class="ps-label">Margem</div><div class="ps-val ps-margem">${p.margem}%</div></div>
+      <div class="ps-item"><div class="ps-label">Estoque</div><div class="ps-val" style="color:${st.cls==='status-zerado'?'var(--coral)':st.cls==='status-alerta'?'var(--amber)':'var(--green)'}">${fNum(p.estoqueAtual||0,2)} ${un}</div></div>
+    </div>
+    <div class="prod-actions">
+      <button class="btn-edit" onclick="editarProduto('${p.id}')">✎ Editar</button>
+      <button class="btn-sm" onclick="verCalculo('${p.id}')">📊 Análise</button>
+      <button class="btn-sm" onclick="abrirProducao('${p.id}')">📦 Produzir</button>
+      <button class="btn-del" onclick="excluirProduto('${p.id}')">✕</button>
+    </div>
+  </div>`;}).join('');
+}
+
+function verCalculo(id) { navegarPara('calculos'); document.getElementById('selectProdutoCalculo').value=id; renderDetalheCalculo(id); }
+
+function editarProduto(id) {
+  const p=App.produtos.find(x=>x.id===id); if(!p) return;
+  const r=parsRend(p.volume);
+  document.getElementById('produtoId').value=p.id;
+  document.getElementById('produtoNome').value=p.nome;
+  document.getElementById('produtoRendimentoQtd').value=Number.isFinite(r.quantidade)?r.quantidade:'';
+  document.getElementById('produtoRendimentoUnidade').value=r.unidade||'g';
+  document.getElementById('produtoMargem').value=p.margem;
+  document.getElementById('produtoDespesas').value=p.despesas;
+  document.getElementById('produtoPrecoVenda').value=p.precoVenda||'';
+  document.getElementById('produtoEstoqueAtual').value=p.estoqueAtual??0;
+  document.getElementById('produtoEstoqueMinimo').value=p.estoqueMinimo??0;
+  document.getElementById('produtoDescricao').value=p.descricao||'';
+  document.getElementById('formProdutoTitulo').textContent='✎ Editar Produto';
+  App.composicaoTemp=(p.composicao||[]).map(i=>({...i}));
+  renderComposicao(); atualizarSelectInsumos();
+  document.getElementById('formProdutoBody').classList.remove('hidden');
+  document.getElementById('btnToggleFormProduto').textContent='−';
+  document.getElementById('formProdutoCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+async function excluirProduto(id) {
+  const p=App.produtos.find(x=>x.id===id); if(!p) return;
+  const ok=await confirmar('Excluir Produto',`Excluir "${p.nome}"?`); if(!ok) return;
+  App.produtos=App.produtos.filter(x=>x.id!==id); Storage.saveProdutos(App.produtos);
+  renderProdutos(); atualizarSelectCalculo(); showToast(`"${p.nome}" excluído.`);
+}
+
+function resetFormProduto() {
+  document.getElementById('formProduto').reset();
+  document.getElementById('produtoId').value='';
+  document.getElementById('produtoRendimentoQtd').value='';
+  document.getElementById('produtoRendimentoUnidade').value='g';
+  document.getElementById('produtoMargem').value=80;
+  document.getElementById('produtoDespesas').value=0;
+  document.getElementById('produtoPrecoVenda').value='';
+  document.getElementById('produtoEstoqueAtual').value=0;
+  document.getElementById('produtoEstoqueMinimo').value=0;
+  document.getElementById('formProdutoTitulo').textContent='➕ Novo Produto';
+  App.composicaoTemp=[]; renderComposicao();
+}
+
+function temCiclo(pid,comp,rascunho,vis=new Set()) {
+  if(vis.has(pid)) return true;
+  const p=rascunho&&rascunho.id===pid?rascunho:App.produtos.find(x=>x.id===pid); if(!p) return false;
+  const prox=new Set(vis); prox.add(pid);
+  const itens=rascunho&&rascunho.id===pid?comp:(p.composicao||[]);
+  for(const io of itens){const it=normItem(io);if(!it||it.tipo!=='produto') continue;if(it.itemId===pid) return true;if(temCiclo(it.itemId,comp,rascunho,prox)) return true;}
+  return false;
+}
+
+document.getElementById('formProduto').addEventListener('submit',function(e){
+  e.preventDefault();
+  const id=document.getElementById('produtoId').value;
+  const nome=document.getElementById('produtoNome').value.trim();
+  const rq=parseFloat(document.getElementById('produtoRendimentoQtd').value);
+  const ru=document.getElementById('produtoRendimentoUnidade').value;
+  const margem=parseFloat(document.getElementById('produtoMargem').value)||0;
+  const despesas=parseFloat(document.getElementById('produtoDespesas').value)||0;
+  const pv=parseFloat(document.getElementById('produtoPrecoVenda').value)||null;
+  const ea=parseFloat(document.getElementById('produtoEstoqueAtual').value)||0;
+  const em=parseFloat(document.getElementById('produtoEstoqueMinimo').value)||0;
+  const desc=document.getElementById('produtoDescricao').value.trim();
+  if(!nome){showToast('Informe o nome.','error');return;}
+  if(!Number.isFinite(rq)||rq<=0){showToast('Informe o rendimento.','error');return;}
+  const comp=App.composicaoTemp.map(i=>({...i}));
+  const rascunho={id:id||gerarId(),composicao:comp};
+  if(temCiclo(rascunho.id,comp,rascunho)){showToast('Composição circular detectada!','error');return;}
+  const dados={nome,volume:`${rq}${ru}`,rendimentoQtd:rq,rendimentoUnidade:ru,margem,despesas,precoVenda:pv,estoqueAtual:ea,estoqueMinimo:em,descricao:desc,composicao:comp};
+  if(id){const idx=App.produtos.findIndex(p=>p.id===id);if(idx!==-1) App.produtos[idx]={...App.produtos[idx],...dados};showToast(`"${nome}" atualizado!`);}
+  else{App.produtos.push({id:gerarId(),...dados});showToast(`"${nome}" cadastrado!`);}
+  Storage.saveProdutos(App.produtos); resetFormProduto(); renderProdutos(); atualizarSelectCalculo(); atualizarSelectVendas();
+});
+
+// ============ COMPOSIÇÃO ============
+function atualizarHintUnidade() {
+  const sel=document.getElementById('selectInsumoComposicao'), id=sel.value;
+  const opt=sel.options[sel.selectedIndex], tipo=opt?opt.dataset.tipo:'';
+  const hint=document.getElementById('unidadeHintComposicao'), su=document.getElementById('unidadeInsumoComposicao');
+  const item=tipo==='produto'?App.produtos.find(p=>p.id===id):App.insumos.find(i=>i.id===id);
+  if(!item){hint.textContent='—';return;}
+  const un=tipo==='produto'?parsRend(item.volume).unidade||'un':(item.unidade||'un');
+  hint.textContent=un; if(su) su.value=un;
+}
+
+function atualizarSelectInsumos() {
+  const sel=document.getElementById('selectInsumoComposicao'), val=sel.value;
+  const ped=document.getElementById('produtoId').value;
+  sel.innerHTML='<option value="">Selecione um componente...</option>';
+  if(App.insumos.length>0){const g=document.createElement('optgroup');g.label='Insumos';App.insumos.forEach(ins=>{const o=document.createElement('option');o.value=ins.id;o.dataset.tipo='insumo';o.textContent=`${ins.nome} (${ins.unidade}) — estq: ${fNum(ins.estoqueAtual||0,2)}`;g.appendChild(o);});sel.appendChild(g);}
+  const disp=App.produtos.filter(p=>p.id!==ped);
+  if(disp.length>0){const g=document.createElement('optgroup');g.label='Produtos acabados';disp.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.dataset.tipo='produto';o.textContent=`${p.nome}${p.volume?` (${p.volume})`:''}`;g.appendChild(o);});sel.appendChild(g);}
+  sel.value=val;
+}
+
+function renderComposicao() {
+  const tbody=document.getElementById('tbodyComposicao');
+  if(!App.composicaoTemp.length){tbody.innerHTML=`<tr class="empty-row"><td colspan="6">Nenhum componente. Adicione acima.</td></tr>`;document.getElementById('custoTotalComposicao').textContent=fBRL(0);document.getElementById('precoSugeridoComposicao').textContent=fBRL(0);return;}
+  let total=0;
+  tbody.innerHTML=App.composicaoTemp.map((io,idx)=>{
+    const it=normItem(io); if(!it) return '';
+    const comp=getComp(it); if(!comp) return '';
+    const cu=getCustoUnitComp(it);
+    if(Number.isNaN(cu)) return `<tr><td colspan="5" style="color:var(--coral)">Ciclo em "${comp.nome}"</td><td><button class="btn-del" onclick="removerComp(${idx})">✕</button></td></tr>`;
+    const custo=cu*it.quantidade; total+=custo;
+    const estDisp=it.tipo==='insumo'?`${fNum(comp.estoqueAtual||0,2)} ${comp.unidade}`:'—';
+    const estOk=it.tipo==='insumo'&&(comp.estoqueAtual||0)>=it.quantidade;
+    return`<tr>
+      <td><span class="tag ${it.tipo==='produto'?'tag-produto':'tag-fruta'}" style="margin-right:4px">${labelComp(it)}</span>${comp.nome}</td>
+      <td>${fNum(it.quantidade,3)}</td><td>${getUnidComp(it)}</td>
+      <td style="color:var(--coral)">${fBRL(custo)}</td>
+      <td style="color:${estOk||it.tipo==='produto'?'var(--green)':'var(--coral)'}">${estDisp}</td>
+      <td><button class="btn-del" onclick="removerComp(${idx})">✕</button></td></tr>`;}).join('');
+  document.getElementById('custoTotalComposicao').textContent=fBRL(total);
+  const marg=parseFloat(document.getElementById('produtoMargem').value)||0, desp=parseFloat(document.getElementById('produtoDespesas').value)||0;
+  document.getElementById('precoSugeridoComposicao').textContent=fBRL((total+desp)*(1+marg/100));
+}
+
+function removerComp(idx){App.composicaoTemp.splice(idx,1);renderComposicao();}
+
+document.getElementById('btnAdicionarInsumo').addEventListener('click',()=>{
+  const sel=document.getElementById('selectInsumoComposicao'), id=sel.value;
+  const opt=sel.options[sel.selectedIndex], tipo=opt?opt.dataset.tipo:'';
+  const qtd=parseFloat(document.getElementById('qtdInsumoComposicao').value);
+  const unid=document.getElementById('unidadeInsumoComposicao').value;
+  if(!id||!tipo){showToast('Selecione um componente.','error');return;}
+  if(!qtd||qtd<=0){showToast('Informe uma quantidade.','error');return;}
+  const ped=document.getElementById('produtoId').value;
+  if(tipo==='produto'&&id===ped){showToast('Um produto não pode compor a si mesmo.','error');return;}
+  const ji=App.composicaoTemp.findIndex(i=>{const it=normItem(i);return it&&it.tipo===tipo&&it.itemId===id;});
+  if(ji!==-1){const ia=normItem(App.composicaoTemp[ji]);App.composicaoTemp[ji]={...ia,quantidade:ia.quantidade+qtd,unidade:unid||ia.unidade};}
+  else App.composicaoTemp.push({tipo,itemId:id,quantidade:qtd,unidade:unid});
+  sel.value=''; document.getElementById('qtdInsumoComposicao').value=''; document.getElementById('unidadeHintComposicao').textContent='—';
+  renderComposicao();
+});
+
+// ============ CÁLCULOS ============
+function atualizarSelectCalculo() {
+  const sel=document.getElementById('selectProdutoCalculo'), val=sel.value;
+  sel.innerHTML='<option value="">— Selecione um produto —</option>';
+  App.produtos.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=`${p.nome}${p.volume?` (${p.volume})`:''}`; sel.appendChild(o);});
+  sel.value=val;
+}
+function renderCalculos() {
+  atualizarSelectCalculo();
+  const ten=!App.produtos.length;
+  document.getElementById('semProdutos').classList[ten?'remove':'add']('hidden');
+  if(ten){document.getElementById('painelCalculo').classList.add('hidden');return;}
+  const val=document.getElementById('selectProdutoCalculo').value;
+  if(val) renderDetalheCalculo(val); else document.getElementById('painelCalculo').classList.add('hidden');
+}
+function renderDetalheCalculo(pid) {
+  const p=App.produtos.find(x=>x.id===pid); if(!p) return;
+  const c=calcProd(p);
+  document.getElementById('painelCalculo').classList.remove('hidden');
+  document.getElementById('calcNomeProduto').textContent=p.nome;
+  document.getElementById('calcVolumeProduto').textContent=p.volume||'—';
+  document.getElementById('calcCustoInsumos').textContent=c.ciclo?'Inválido':fBRL(c.custoInsumos);
+  document.getElementById('calcDespesas').textContent=c.ciclo?'—':fBRL(c.despesas);
+  document.getElementById('calcCustoTotal').textContent=c.ciclo?'—':fBRL(c.custoTotal);
+  document.getElementById('calcMargem').textContent=p.margem+'%';
+  document.getElementById('calcPrecoSugerido').textContent=c.ciclo?'—':fBRL(c.precoSugerido);
+  document.getElementById('calcLucro').textContent=c.ciclo?'—':fBRL(c.lucro);
+  const tbody=document.getElementById('tbodyDetalheCalculo');
+  if(!p.composicao||!p.composicao.length){tbody.innerHTML=`<tr class="empty-row"><td colspan="6">Nenhum componente.</td></tr>`;return;}
+  tbody.innerHTML=p.composicao.map(io=>{
+    const it=normItem(io); if(!it) return`<tr><td colspan="6" style="color:var(--text-4)">Componente inválido</td></tr>`;
+    const comp=getComp(it); if(!comp) return`<tr><td colspan="6" style="color:var(--text-4)">Componente removido</td></tr>`;
+    const cu=getCustoUnitComp(it); if(Number.isNaN(cu)) return`<tr><td colspan="6" style="color:var(--coral)">Ciclo em ${comp.nome}</td></tr>`;
+    const ci=cu*it.quantidade, pct=c.custoInsumos>0?(ci/c.custoInsumos*100):0, un=getUnidComp(it);
+    return`<tr><td>${labelComp(it)}: ${comp.nome}</td><td>${it.tipo==='produto'?`<span class="tag tag-produto">Produto</span>`:bCat(comp.categoria)}</td>
+    <td>${fNum(it.quantidade,3)} ${un}</td><td>${fBRL(cu)}/${un}</td>
+    <td style="color:var(--coral);font-weight:700">${fBRL(ci)}</td>
+    <td><div class="pct-bar"><div class="pct-track"><div class="pct-fill" style="width:${Math.min(pct,100)}%"></div></div><span class="pct-lbl">${pct.toFixed(1)}%</span></div></td></tr>`;}).join('');
+  document.getElementById('simMargem').value=p.margem;
+  atualizarSimulador(p,c.custoTotal);
+}
+function atualizarSimulador(p,ct) {
+  const marg=Math.max(0,parseFloat(document.getElementById('simMargem').value)||0);
+  document.getElementById('simMargemVal').textContent=marg+'%';
+  document.getElementById('simPreco').textContent=fBRL(ct*(1+marg/100));
+  document.getElementById('simLucro').textContent=fBRL(ct*(marg/100));
+}
+
+// ============ VENDAS REAIS ============
+function verificarEstoqueVenda(p,qtd) {
+  const r=parsRend(p.volume), base=(Number.isFinite(r.quantidade)&&r.quantidade>0)?r.quantidade:1;
+  const qb=qtd*base, disp=p.estoqueAtual||0;
+  if(disp<qb) return [{produto:p.nome,disp,nec:qb,un:unidadeProd(p),qtdV:qtd,vol:r.texto||p.volume||''}];
+  return [];
+}
+function baixarEstoqueProd(p,qtd,vid) {
+  const idx=App.produtos.findIndex(x=>x.id===p.id); if(idx===-1) return;
+  const r=parsRend(p.volume), base=(Number.isFinite(r.quantidade)&&r.quantidade>0)?r.quantidade:1;
+  const qb=qtd*base, antes=App.produtos[idx].estoqueAtual||0;
+  App.produtos[idx].estoqueAtual=Math.max(0,antes-qb);
+  registrarMov({alvoTipo:'produto',itemId:p.id,tipo:'venda',quantidade:qb,saldoApos:App.produtos[idx].estoqueAtual,observacao:`Venda ×${qtd} (ref:${vid})`});
+  Storage.saveProdutos(App.produtos);
+}
+function atualizarSelectVendas() {
+  ['vendaRealProduto','filtroVendasProduto'].forEach(sid=>{
+    const sel=document.getElementById(sid); if(!sel) return;
+    const val=sel.value;
+    sel.innerHTML=sid==='filtroVendasProduto'?'<option value="">Todos os produtos</option>':'<option value="">— Selecione um produto —</option>';
+    App.produtos.filter(p=>!calcProd(p).ciclo).forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=`${p.nome}${p.volume?` (${p.volume})`:''} — estq: ${fNum(p.estoqueAtual||0,2)} ${unidadeProd(p)}`;sel.appendChild(o);});
+    sel.value=val;
+  });
+}
+function atualizarPreviewVenda() {
+  const pid=document.getElementById('vendaRealProduto').value, qtd=parseFloat(document.getElementById('vendaRealQtd').value)||0;
+  const pu=parseFloat(document.getElementById('vendaRealPreco').value)||0, desc=parseFloat(document.getElementById('vendaRealDesconto').value)||0;
+  const pv=document.getElementById('previewVenda');
+  if(!pid||qtd<=0||pu<=0){pv.classList.add('hidden');return;}
+  const p=App.produtos.find(x=>x.id===pid); if(!p){pv.classList.add('hidden');return;}
+  const c=calcProd(p), pf=pu*(1-desc/100), tot=pf*qtd, ct=c.custoTotal*qtd, luc=tot-ct, marg=tot>0?(luc/tot)*100:0;
+  document.getElementById('pvPrecoTotal').textContent=fBRL(tot);
+  document.getElementById('pvCustoTotal').textContent=fBRL(ct);
+  document.getElementById('pvLucro').textContent=fBRL(luc);
+  document.getElementById('pvLucro').style.color=luc>=0?'var(--green)':'var(--coral)';
+  document.getElementById('pvMargem').textContent=`${marg.toFixed(1)}%`;
+  const av=verificarEstoqueVenda(p,qtd), avEl=document.getElementById('pvAvisoEstoque');
+  if(av.length>0){avEl.classList.remove('hidden');avEl.textContent=`⚠ Estoque insuficiente: ${av.map(a=>`${a.produto} (tem ${fNum(a.disp,2)} ${a.un}, precisa ${fNum(a.nec,2)} ${a.un} para ${fNum(a.qtdV,2)} un)`).join(', ')}`;}
+  else avEl.classList.add('hidden');
+  pv.classList.remove('hidden');
+}
+document.getElementById('vendaRealProduto').addEventListener('change',function(){
+  const p=App.produtos.find(x=>x.id===this.value);
+  if(p&&p.precoVenda) document.getElementById('vendaRealPreco').value=p.precoVenda.toFixed(2);
+  else if(p){const c=calcProd(p);if(c.precoSugerido) document.getElementById('vendaRealPreco').value=c.precoSugerido.toFixed(2);}
+  atualizarPreviewVenda();
+});
+['vendaRealQtd','vendaRealPreco','vendaRealDesconto'].forEach(id=>{document.getElementById(id).addEventListener('input',atualizarPreviewVenda);});
+
+document.getElementById('btnRegistrarVenda').addEventListener('click',async()=>{
+  const pid=document.getElementById('vendaRealProduto').value;
+  const qtd=parseFloat(document.getElementById('vendaRealQtd').value)||0;
+  const pu=parseFloat(document.getElementById('vendaRealPreco').value)||0;
+  const desc=parseFloat(document.getElementById('vendaRealDesconto').value)||0;
+  const canal=document.getElementById('vendaRealCanal').value;
+  const obs=document.getElementById('vendaRealObs').value.trim();
+  if(!pid){showToast('Selecione um produto.','error');return;}
+  if(qtd<=0){showToast('Informe uma quantidade.','error');return;}
+  if(pu<=0){showToast('Informe o preço.','error');return;}
+  const p=App.produtos.find(x=>x.id===pid); if(!p) return;
+  const av=verificarEstoqueVenda(p,qtd);
+  if(av.length>0){showToast(`Estoque insuficiente. Produza mais antes de vender.`,'error');return;}
+  const c=calcProd(p), pf=pu*(1-desc/100), tot=pf*qtd, ct=c.custoTotal*qtd, luc=tot-ct;
+  const vid=gerarId();
+  App.vendas.push({id:vid,produtoId:pid,produtoNome:p.nome,quantidade:qtd,precoUnitario:pu,desconto:desc,precoFinal:pf,totalFinal:tot,custoTotal:ct,lucro:luc,canal,observacao:obs,data:new Date().toISOString()});
+  Storage.saveVendas(App.vendas);
+  baixarEstoqueProd(p,qtd,vid);
+  ['vendaRealProduto','vendaRealPreco','vendaRealObs'].forEach(id=>{document.getElementById(id).value='';});
+  document.getElementById('vendaRealQtd').value=1; document.getElementById('vendaRealDesconto').value=0;
+  document.getElementById('previewVenda').classList.add('hidden');
+  renderVendasReais(); if(App.paginaAtual==='dashboard') renderDashboard(); atualizarBadge();
+  showToast(`Venda registrada! ${fBRL(tot)} | Lucro: ${fBRL(luc)}`);
+});
+document.getElementById('btnCancelarVendaReal').addEventListener('click',()=>{
+  ['vendaRealProduto','vendaRealPreco','vendaRealObs'].forEach(id=>{document.getElementById(id).value='';});
+  document.getElementById('vendaRealQtd').value=1; document.getElementById('vendaRealDesconto').value=0;
+  document.getElementById('previewVenda').classList.add('hidden');
+});
+
+function renderVendasReais() {
+  atualizarSelectVendas();
+  const hoje=new Date().toDateString();
+  const vh=App.vendas.filter(v=>new Date(v.data).toDateString()===hoje);
+  const fat=vh.reduce((a,v)=>a+v.totalFinal,0), luc=vh.reduce((a,v)=>a+v.lucro,0), ct=vh.reduce((a,v)=>a+v.custoTotal,0), mg=fat>0?(luc/fat)*100:0;
+  document.getElementById('statsVendasHoje').innerHTML=`
+    <div class="stat-card" style="--accent:var(--acai-2)"><div class="stat-label">Vendas Hoje</div><div class="stat-value">${vh.length}</div><div class="stat-sub">registros</div></div>
+    <div class="stat-card" style="--accent:var(--green)"><div class="stat-label">Faturamento Hoje</div><div class="stat-value" style="font-size:1.25rem">${fBRL(fat)}</div><div class="stat-sub">receita bruta</div></div>
+    <div class="stat-card" style="--accent:var(--coral)"><div class="stat-label">Custo Hoje</div><div class="stat-value" style="font-size:1.25rem">${fBRL(ct)}</div><div class="stat-sub">custo dos produtos</div></div>
+    <div class="stat-card" style="--accent:#3b82f6"><div class="stat-label">Lucro Hoje</div><div class="stat-value" style="font-size:1.25rem;color:${luc>=0?'var(--green)':'var(--coral)'}">${fBRL(luc)}</div><div class="stat-sub">${mg.toFixed(1)}% de margem</div></div>
+  `;
+  renderHistVendas();
+}
+
+function renderHistVendas() {
+  const tbody=document.getElementById('tbodyVendasReais');
+  const per=document.getElementById('filtroVendasPeriodo').value, pf=document.getElementById('filtroVendasProduto').value;
+  const agora=new Date(); let lista=[...App.vendas].sort((a,b)=>new Date(b.data)-new Date(a.data));
+  if(per==='hoje') lista=lista.filter(v=>new Date(v.data).toDateString()===agora.toDateString());
+  else if(per==='semana'){const ini=new Date(agora);ini.setDate(agora.getDate()-7);lista=lista.filter(v=>new Date(v.data)>=ini);}
+  else if(per==='mes') lista=lista.filter(v=>{const d=new Date(v.data);return d.getMonth()===agora.getMonth()&&d.getFullYear()===agora.getFullYear();});
+  if(pf) lista=lista.filter(v=>v.produtoId===pf);
+  if(!lista.length){tbody.innerHTML=`<tr class="empty-row"><td colspan="9">Nenhuma venda no período.</td></tr>`;document.getElementById('totaisVendas').innerHTML='';return;}
+  tbody.innerHTML=lista.map(v=>`<tr>
+    <td style="white-space:nowrap;font-size:.81rem">${fDT(v.data)}</td>
+    <td><strong>${v.produtoNome}</strong></td><td>${v.quantidade}</td>
+    <td>${fBRL(v.precoFinal)}</td><td style="font-weight:700">${fBRL(v.totalFinal)}</td>
+    <td style="color:var(--coral)">${fBRL(v.custoTotal)}</td>
+    <td style="color:${v.lucro>=0?'var(--green)':'var(--coral)'};font-weight:700">${fBRL(v.lucro)}</td>
+    <td>${bCanal(v.canal)}</td>
+    <td><button class="btn-del" onclick="excluirVenda('${v.id}')">✕</button></td></tr>`).join('');
+  const tf=lista.reduce((a,v)=>a+v.totalFinal,0), tcusto=lista.reduce((a,v)=>a+v.custoTotal,0), tl=lista.reduce((a,v)=>a+v.lucro,0), tm=tf>0?(tl/tf*100):0;
+  document.getElementById('totaisVendas').innerHTML=`<div class="totais-row"><span><strong>${lista.length}</strong> venda(s)</span><span>Fat: <strong style="color:var(--green)">${fBRL(tf)}</strong></span><span>Custo: <strong style="color:var(--coral)">${fBRL(tcusto)}</strong></span><span>Lucro: <strong style="color:${tl>=0?'var(--green)':'var(--coral)'}">${fBRL(tl)}</strong></span><span>Margem: <strong>${tm.toFixed(1)}%</strong></span></div>`;
+}
+
+async function excluirVenda(id) {
+  const ok=await confirmar('Excluir Venda','O estoque NÃO será restaurado. Confirmar?'); if(!ok) return;
+  App.vendas=App.vendas.filter(v=>v.id!==id); Storage.saveVendas(App.vendas);
+  renderHistVendas(); renderVendasReais(); showToast('Venda excluída.');
+}
+
+// ============ SIMULAÇÃO ============
+function atualizarSelectSimulacao() {
+  const sel=document.getElementById('selectProdutoVenda'), val=sel.value;
+  sel.innerHTML='<option value="">— Selecione —</option>';
+  App.produtos.filter(p=>!calcProd(p).ciclo).forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=`${p.nome}${p.volume?` (${p.volume})`:''}`; sel.appendChild(o);});
+  sel.value=val;
+}
+function renderSimulacao() { atualizarSelectSimulacao(); document.getElementById('semVenda').classList.remove('hidden'); document.getElementById('painelVenda').classList.add('hidden'); if(document.getElementById('selectProdutoVenda').value) atualizarSimVenda(); }
+function atualizarSimVenda() {
+  const pid=document.getElementById('selectProdutoVenda').value, p=App.produtos.find(x=>x.id===pid);
+  if(!p){document.getElementById('painelVenda').classList.add('hidden');document.getElementById('semVenda').classList.remove('hidden');return;}
+  const c=calcProd(p); if(c.ciclo) return;
+  const meta=Math.max(0,parseFloat(document.getElementById('vendaMetaDiaria').value)||0);
+  const qtd=Math.max(0,parseFloat(document.getElementById('vendaQuantidade').value)||0);
+  const dias=Math.min(31,Math.max(1,parseFloat(document.getElementById('vendaDiasMes').value)||30));
+  const desc=Math.min(100,Math.max(0,parseFloat(document.getElementById('vendaDesconto').value)||0));
+  const pi=document.getElementById('vendaPrecoUnitario'), pb=parseFloat(pi.value)||c.precoSugerido;
+  if(!pi.value&&c.precoSugerido) pi.value=c.precoSugerido.toFixed(2);
+  const pf=pb*(1-desc/100), fatD=pf*qtd, cD=c.custoTotal*qtd, lD=fatD-cD;
+  const fatM=fatD*dias, cM=cD*dias, lM=lD*dias, qtdM=qtd*dias, metaM=meta*dias;
+  const metaAt=metaM>0?(qtdM/metaM)*100:0, marg=fatD>0?(lD/fatD)*100:0;
+  document.getElementById('semVenda').classList.add('hidden');
+  document.getElementById('painelVenda').classList.remove('hidden');
+  document.getElementById('simStats1').innerHTML=`
+    <div class="stat-card" style="--accent:var(--acai-2)"><div class="stat-label">Fat. Diário</div><div class="stat-value" style="font-size:1.25rem">${fBRL(fatD)}</div><div class="stat-sub">receita estimada/dia</div></div>
+    <div class="stat-card" style="--accent:var(--coral)"><div class="stat-label">Custo Diário</div><div class="stat-value" style="font-size:1.25rem">${fBRL(cD)}</div><div class="stat-sub">custo dos produtos</div></div>
+    <div class="stat-card" style="--accent:var(--green)"><div class="stat-label">Lucro Diário</div><div class="stat-value" style="font-size:1.25rem">${fBRL(lD)}</div><div class="stat-sub">resultado do dia</div></div>
+    <div class="stat-card" style="--accent:#3b82f6"><div class="stat-label">Margem Efetiva</div><div class="stat-value" style="font-size:1.25rem">${marg.toFixed(1)}%</div><div class="stat-sub">sobre o faturamento</div></div>
+  `;
+  document.getElementById('simStats2').innerHTML=`
+    <div class="stat-card" style="--accent:var(--acai-2)"><div class="stat-label">Qtd no Mês</div><div class="stat-value">${fNum(qtdM,0)}</div><div class="stat-sub">vendas × dias</div></div>
+    <div class="stat-card" style="--accent:var(--green)"><div class="stat-label">Fat. Mensal</div><div class="stat-value" style="font-size:1.25rem">${fBRL(fatM)}</div><div class="stat-sub">projeção</div></div>
+    <div class="stat-card" style="--accent:var(--green)"><div class="stat-label">Lucro Mensal</div><div class="stat-value" style="font-size:1.25rem">${fBRL(lM)}</div><div class="stat-sub">resultado mensal</div></div>
+    <div class="stat-card" style="--accent:${metaAt>=100?'var(--green)':'var(--amber)'}"><div class="stat-label">Meta Atingida</div><div class="stat-value" style="color:${metaAt>=100?'var(--green)':'inherit'}">${metaAt.toFixed(1)}%</div><div class="stat-sub">vendas ÷ meta</div></div>
+  `;
+}
+
+// ============ EXPORTAR ============
+function exportarRelatorio() {
+  const agora=new Date();
+  const linhas=App.produtos.map(p=>{const c=calcProd(p);return`<tr><td>${p.nome}</td><td>${p.volume||'—'}</td><td>${fBRL(c.custoInsumos)}</td><td>${fBRL(c.despesas)}</td><td>${fBRL(c.custoTotal)}</td><td>${p.margem}%</td><td>${fBRL(c.precoSugerido)}</td><td>${fBRL(c.lucro)}</td></tr>`;}).join('');
+  const vm=App.vendas.filter(v=>{const d=new Date(v.data);return d.getMonth()===agora.getMonth()&&d.getFullYear()===agora.getFullYear();});
+  const lv=vm.map(v=>`<tr><td>${fDT(v.data)}</td><td>${v.produtoNome}</td><td>${v.quantidade}</td><td>${fBRL(v.precoFinal)}</td><td>${fBRL(v.totalFinal)}</td><td>${fBRL(v.lucro)}</td><td>${v.canal}</td></tr>`).join('');
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>AçaíPrice — Relatório</title><style>body{font-family:Arial,sans-serif;font-size:12px;color:#222}h1{color:#5a3e8a}h2{color:#5a3e8a;font-size:14px;margin:24px 0 8px}table{width:100%;border-collapse:collapse;margin-bottom:24px}th{background:#5a3e8a;color:#fff;padding:8px;text-align:left;font-size:11px}td{padding:7px 8px;border-bottom:1px solid #eee}</style></head><body><h1>🫐 AçaíPrice — Relatório</h1><p>Gerado em ${agora.toLocaleString('pt-BR')}</p><h2>Precificação</h2><table><thead><tr><th>Produto</th><th>Volume</th><th>Custo Insumos</th><th>Despesas</th><th>Custo Total</th><th>Margem</th><th>Preço Sugerido</th><th>Lucro/Un.</th></tr></thead><tbody>${linhas}</tbody></table><h2>Vendas do Mês</h2><table><thead><tr><th>Data</th><th>Produto</th><th>Qtd</th><th>Preço</th><th>Total</th><th>Lucro</th><th>Canal</th></tr></thead><tbody>${lv}</tbody></table><script>window.onload=()=>window.print()<\/script></body></html>`;
+  const w=window.open('','_blank'); w.document.write(html); w.document.close();
+}
+
+// ============ MOCK DATA ============
+function carregarMock() {
+  const ids=Array.from({length:8},()=>gerarId());
+  const [i1,i2,i3,i4,i5,i6,i7,i8]=ids;
+  const ins=[
+    {id:i1,nome:'Polpa de Açaí Grosso',categoria:'fruta',unidade:'kg',qtdComprada:10,precoPago:85,custoUnitario:8.5,estoqueAtual:8.5,estoqueMinimo:2,fornecedor:'Distribuidora Amazônia'},
+    {id:i2,nome:'Leite Condensado',categoria:'laticinios',unidade:'g',qtdComprada:395,precoPago:5.99,custoUnitario:0.01516,estoqueAtual:790,estoqueMinimo:200,fornecedor:''},
+    {id:i3,nome:'Leite em Pó Integral',categoria:'laticinios',unidade:'g',qtdComprada:400,precoPago:12.9,custoUnitario:0.03225,estoqueAtual:400,estoqueMinimo:100,fornecedor:''},
+    {id:i4,nome:'Granola Premium',categoria:'complemento',unidade:'g',qtdComprada:500,precoPago:9.5,custoUnitario:0.019,estoqueAtual:150,estoqueMinimo:200,fornecedor:'Mercado Central'},
+    {id:i5,nome:'Morango Congelado',categoria:'fruta',unidade:'g',qtdComprada:1000,precoPago:18,custoUnitario:0.018,estoqueAtual:0,estoqueMinimo:300,fornecedor:''},
+    {id:i6,nome:'Garrafa PET 500ml',categoria:'embalagem',unidade:'un',qtdComprada:100,precoPago:38,custoUnitario:0.38,estoqueAtual:85,estoqueMinimo:20,fornecedor:'Embalagens Brasil'},
+    {id:i7,nome:'Tampa Rosca',categoria:'embalagem',unidade:'un',qtdComprada:100,precoPago:8,custoUnitario:0.08,estoqueAtual:85,estoqueMinimo:20,fornecedor:''},
+    {id:i8,nome:'Etiqueta',categoria:'embalagem',unidade:'un',qtdComprada:200,precoPago:25,custoUnitario:0.125,estoqueAtual:180,estoqueMinimo:50,fornecedor:''},
+  ];
+  const [p1,p2,p3]=[gerarId(),gerarId(),gerarId()];
+  const prods=[
+    {id:p1,nome:'Açaí Tradicional',volume:'300ml',margem:75,despesas:0.2,precoVenda:12.9,descricao:'Açaí puro com granola',estoqueAtual:12,estoqueMinimo:3,composicao:[{tipo:'insumo',itemId:i1,quantidade:0.25,unidade:'kg'},{tipo:'insumo',itemId:i4,quantidade:30,unidade:'g'},{tipo:'insumo',itemId:i6,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i7,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i8,quantidade:1,unidade:'un'}]},
+    {id:p2,nome:'Açaí Cremoso',volume:'500ml',margem:80,despesas:0.3,precoVenda:18.9,descricao:'Com leite condensado e granola',estoqueAtual:8,estoqueMinimo:2,composicao:[{tipo:'insumo',itemId:i1,quantidade:0.38,unidade:'kg'},{tipo:'insumo',itemId:i2,quantidade:60,unidade:'g'},{tipo:'insumo',itemId:i3,quantidade:20,unidade:'g'},{tipo:'insumo',itemId:i4,quantidade:40,unidade:'g'},{tipo:'insumo',itemId:i6,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i7,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i8,quantidade:1,unidade:'un'}]},
+    {id:p3,nome:'Açaí com Morango',volume:'1l',margem:70,despesas:0.5,precoVenda:28,descricao:'Açaí, morango e granola premium',estoqueAtual:4,estoqueMinimo:1,composicao:[{tipo:'insumo',itemId:i1,quantidade:0.7,unidade:'kg'},{tipo:'insumo',itemId:i5,quantidade:150,unidade:'g'},{tipo:'insumo',itemId:i4,quantidade:60,unidade:'g'},{tipo:'insumo',itemId:i2,quantidade:80,unidade:'g'},{tipo:'insumo',itemId:i6,quantidade:2,unidade:'un'},{tipo:'insumo',itemId:i7,quantidade:2,unidade:'un'},{tipo:'insumo',itemId:i8,quantidade:1,unidade:'un'}]},
+  ];
+  Storage.saveInsumos(ins); Storage.saveProdutos(prods);
+  return {insumos:ins,produtos:prods};
+}
+
+// ============ INIT ============
+function init() {
+  App.insumos=Storage.getInsumos();
+  App.produtos=Storage.getProdutos().map(p=>({estoqueAtual:0,estoqueMinimo:0,...p,estoqueAtual:Number.isFinite(parseFloat(p.estoqueAtual))?parseFloat(p.estoqueAtual):0,estoqueMinimo:Number.isFinite(parseFloat(p.estoqueMinimo))?parseFloat(p.estoqueMinimo):0}));
+  App.vendas=Storage.getVendas();
+  App.movEstoque=Storage.getMovEstoque();
+  if(!App.insumos.length&&!App.produtos.length){const m=carregarMock();App.insumos=m.insumos;App.produtos=m.produtos;}
+  Storage.saveProdutos(App.produtos);
+  renderDashboard(); renderInsumos(); renderProdutos(); atualizarSelectInsumos(); atualizarSelectCalculo(); atualizarSelectVendas(); atualizarBadge();
+
+  // Navegação - todos [data-page]
+  document.querySelectorAll('[data-page]').forEach(btn=>{
+    btn.addEventListener('click',()=>navegarPara(btn.dataset.page));
+  });
+
+  // Menu mobile
+  document.getElementById('menuToggle').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));
+
+  // Toggle formulários
+  document.getElementById('formInsumoToggle').addEventListener('click',()=>{
+    const b=document.getElementById('formInsumoBody'); const h=b.classList.contains('hidden');
+    b.classList.toggle('hidden'); document.getElementById('btnToggleFormInsumo').textContent=h?'−':'+';
+  });
+  document.getElementById('btnCancelarInsumo').addEventListener('click',resetFormInsumo);
+  document.getElementById('btnToggleFormInsumo').addEventListener('click',e=>{e.stopPropagation();const b=document.getElementById('formInsumoBody');const h=b.classList.contains('hidden');b.classList.toggle('hidden');e.target.textContent=h?'−':'+';});
+
+  document.getElementById('formProdutoToggle').addEventListener('click',()=>{
+    const b=document.getElementById('formProdutoBody'); const h=b.classList.contains('hidden');
+    b.classList.toggle('hidden'); document.getElementById('btnToggleFormProduto').textContent=h?'−':'+';
+  });
+  document.getElementById('btnCancelarProduto').addEventListener('click',resetFormProduto);
+  document.getElementById('btnToggleFormProduto').addEventListener('click',e=>{e.stopPropagation();const b=document.getElementById('formProdutoBody');const h=b.classList.contains('hidden');b.classList.toggle('hidden');e.target.textContent=h?'−':'+';});
+
+  // Toggle mov manual
+  document.getElementById('movManualToggle').addEventListener('click',()=>{
+    const b=document.getElementById('movManualBody'); const h=b.classList.contains('hidden');
+    b.classList.toggle('hidden'); document.getElementById('btnToggleMovManual').textContent=h?'−':'+';
+  });
+  document.getElementById('btnToggleMovManual').addEventListener('click',e=>{e.stopPropagation();const b=document.getElementById('movManualBody');const h=b.classList.contains('hidden');b.classList.toggle('hidden');e.target.textContent=h?'−':'+';});
+
+  // Custo unit. em tempo real
+  ['insumoQtd','insumoPreco','insumoUnidade'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.addEventListener('input',calcCustoUnit); el.addEventListener('change',calcCustoUnit);
+  });
+
+  // Preview composição ao mudar margem/despesas
+  ['produtoMargem','produtoDespesas'].forEach(id=>document.getElementById(id).addEventListener('input',renderComposicao));
+
+  // Busca insumos/produtos
+  document.getElementById('buscaInsumo').addEventListener('input',function(){renderInsumos(this.value,document.getElementById('filtroCategoria').value);});
+  document.getElementById('filtroCategoria').addEventListener('change',function(){renderInsumos(document.getElementById('buscaInsumo').value,this.value);});
+  document.getElementById('buscaProduto').addEventListener('input',function(){renderProdutos(this.value);});
+
+  // Composição hint
+  document.getElementById('selectInsumoComposicao').addEventListener('change',atualizarHintUnidade);
+
+  // Cálculos
+  document.getElementById('selectProdutoCalculo').addEventListener('change',function(){if(this.value) renderDetalheCalculo(this.value); else document.getElementById('painelCalculo').classList.add('hidden');});
+  document.getElementById('simMargem').addEventListener('input',function(){const pid=document.getElementById('selectProdutoCalculo').value;const p=App.produtos.find(x=>x.id===pid);if(!p) return;atualizarSimulador(p,calcProd(p).custoTotal);});
+
+  // Simulação
+  document.getElementById('selectProdutoVenda').addEventListener('change',atualizarSimVenda);
+  ['vendaMetaDiaria','vendaQuantidade','vendaDiasMes','vendaPrecoUnitario','vendaDesconto'].forEach(id=>{document.getElementById(id).addEventListener('input',()=>{if(document.getElementById('selectProdutoVenda').value) atualizarSimVenda();});});
+  document.getElementById('btnSimularVenda').addEventListener('click',atualizarSimVenda);
+  document.getElementById('btnLimparVenda').addEventListener('click',()=>{document.getElementById('selectProdutoVenda').value='';['vendaMetaDiaria','vendaQuantidade'].forEach(id=>document.getElementById(id).value=10);document.getElementById('vendaDiasMes').value=30;document.getElementById('vendaPrecoUnitario').value='';document.getElementById('vendaDesconto').value=0;document.getElementById('painelVenda').classList.add('hidden');document.getElementById('semVenda').classList.remove('hidden');});
+
+  // Filtros vendas
+  document.getElementById('filtroVendasPeriodo').addEventListener('change',renderHistVendas);
+  document.getElementById('filtroVendasProduto').addEventListener('change',renderHistVendas);
+
+  // Limpar historicos
+  document.getElementById('btnLimparHistVendas').addEventListener('click',async()=>{const ok=await confirmar('Limpar Histórico','Limpar todas as vendas? Estoques não serão restaurados.');if(!ok) return;App.vendas=[];Storage.saveVendas(App.vendas);renderVendasReais();showToast('Histórico limpo.');});
+  document.getElementById('btnLimparHistMov').addEventListener('click',async()=>{const ok=await confirmar('Limpar Histórico','Limpar todo o histórico de movimentações?');if(!ok) return;App.movEstoque=[];Storage.saveMovEstoque(App.movEstoque);renderHistMov();showToast('Histórico limpo.');});
+
+  // Exportar e limpar tudo
+  document.getElementById('btnExportar').addEventListener('click',exportarRelatorio);
+  document.getElementById('btnLimparTudo').addEventListener('click',async()=>{
+    const ok=await confirmar('Apagar Todos os Dados','Isso apagará TUDO: insumos, produtos, vendas e movimentações. Ação irreversível!');
+    if(!ok) return;
+    Storage.clearAll(); App.insumos=[];App.produtos=[];App.vendas=[];App.movEstoque=[];
+    renderDashboard();renderInsumos();renderProdutos();atualizarSelectInsumos();atualizarSelectCalculo();atualizarSelectVendas();
+    document.getElementById('painelCalculo').classList.add('hidden');atualizarBadge();
+    showToast('Todos os dados apagados.');
+  });
+
+  // Botão próximo passo
+  ['btnProxPasso1','btnProxPasso2'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('click',()=>navegarPara(el.dataset.page));
+  });
+
+  // Sidebar step click
+  ['sideStep1','sideStep2','sideStep3','sideStep4'].forEach(sid=>{
+    const el=document.getElementById(sid);
+    if(el) el.addEventListener('click',()=>navegarPara(el.dataset.page));
+  });
+}
+
+document.addEventListener('DOMContentLoaded',init);
+</script>
 </body>
 </html>
