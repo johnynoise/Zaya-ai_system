@@ -1,5 +1,5 @@
 /**
- * AçaíPrice — Sistema de Precificação v2.0
+ * Precify — Sistema de Precificação v2.0
  * ==========================================
  * Melhorias v2:
  * - Controle de estoque com movimentações
@@ -16,16 +16,16 @@
 // ============================================================
 
 const Storage = {
-  getInsumos()         { return JSON.parse(localStorage.getItem('acaiprice_insumos') || '[]'); },
-  saveInsumos(d)       { localStorage.setItem('acaiprice_insumos', JSON.stringify(d)); },
-  getProdutos()        { return JSON.parse(localStorage.getItem('acaiprice_produtos') || '[]'); },
-  saveProdutos(d)      { localStorage.setItem('acaiprice_produtos', JSON.stringify(d)); },
-  getVendas()          { return JSON.parse(localStorage.getItem('acaiprice_vendas') || '[]'); },
-  saveVendas(d)        { localStorage.setItem('acaiprice_vendas', JSON.stringify(d)); },
-  getMovEstoque()      { return JSON.parse(localStorage.getItem('acaiprice_mov_estoque') || '[]'); },
-  saveMovEstoque(d)    { localStorage.setItem('acaiprice_mov_estoque', JSON.stringify(d)); },
+  getInsumos()         { return JSON.parse(localStorage.getItem('precify_insumos') || localStorage.getItem('acaiprice_insumos') || '[]'); },
+  saveInsumos(d)       { localStorage.setItem('precify_insumos', JSON.stringify(d)); },
+  getProdutos()        { return JSON.parse(localStorage.getItem('precify_produtos') || localStorage.getItem('acaiprice_produtos') || '[]'); },
+  saveProdutos(d)      { localStorage.setItem('precify_produtos', JSON.stringify(d)); },
+  getVendas()          { return JSON.parse(localStorage.getItem('precify_vendas') || localStorage.getItem('acaiprice_vendas') || '[]'); },
+  saveVendas(d)        { localStorage.setItem('precify_vendas', JSON.stringify(d)); },
+  getMovEstoque()      { return JSON.parse(localStorage.getItem('precify_mov_estoque') || localStorage.getItem('acaiprice_mov_estoque') || '[]'); },
+  saveMovEstoque(d)    { localStorage.setItem('precify_mov_estoque', JSON.stringify(d)); },
   clearAll() {
-    ['acaiprice_insumos','acaiprice_produtos','acaiprice_vendas','acaiprice_mov_estoque']
+    ['precify_insumos','precify_produtos','precify_vendas','precify_mov_estoque','acaiprice_insumos','acaiprice_produtos','acaiprice_vendas','acaiprice_mov_estoque']
       .forEach(k => localStorage.removeItem(k));
   }
 };
@@ -1887,11 +1887,11 @@ function exportarRelatorio() {
     <td>${formatBRL(v.lucro)}</td><td>${v.canal}</td>
   </tr>`).join('');
 
-  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>AçaíPrice — Relatório</title>
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Precify — Relatório</title>
   <style>body{font-family:Arial,sans-serif;font-size:12px;color:#222}h1{color:#5d4b8a}h2{color:#5d4b8a;font-size:14px;margin:24px 0 8px}
   p{color:#888;margin-bottom:16px}table{width:100%;border-collapse:collapse;margin-bottom:24px}
   th{background:#5d4b8a;color:#fff;padding:8px;text-align:left;font-size:11px}td{padding:7px 8px;border-bottom:1px solid #eee}</style></head>
-  <body><h1>🫐 AçaíPrice — Relatório</h1><p>Gerado em ${new Date().toLocaleString('pt-BR')}</p>
+  <body><h1>Precify — Relatório</h1><p>Gerado em ${new Date().toLocaleString('pt-BR')}</p>
   <h2>Precificação de Produtos</h2>
   <table><thead><tr><th>Produto</th><th>Volume</th><th>Custo Insumos</th><th>Despesas</th><th>Custo Total</th><th>Margem</th><th>Preço Sugerido</th><th>Lucro/Un.</th></tr></thead><tbody>${linhas}</tbody></table>
   <h2>Vendas do Mês</h2>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AçaíPrice — Precificação</title>
+<title>Precify — Precificação</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Nunito+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -1066,7 +1066,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px;
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-brand">
     <span class="brand-icon">🫐</span>
-    <span class="brand-name">AçaíPrice</span>
+    <span class="brand-name">Precify</span>
     <span class="brand-sub">Sistema de Precificação</span>
   </div>
 
@@ -1123,7 +1123,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px;
 <div class="main-content">
   <header class="topbar" id="topbar">
     <button class="menu-toggle" id="menuToggle">☰</button>
-    <span class="topbar-title">🫐 AçaíPrice</span>
+    <span class="topbar-title">Precify</span>
     <div></div>
   </header>
 
@@ -3224,7 +3224,7 @@ function exportarRelatorio() {
   const linhas=App.produtos.map(p=>{const c=calcProd(p);return`<tr><td>${p.nome}</td><td>${p.volume||'—'}</td><td>${fBRL(c.custoInsumos)}</td><td>${fBRL(c.despesas)}</td><td>${fBRL(c.custoTotal)}</td><td>${p.margem}%</td><td>${fBRL(c.precoSugerido)}</td><td>${fBRL(c.lucro)}</td></tr>`;}).join('');
   const vm=App.vendas.filter(v=>{const d=new Date(v.data);return d.getMonth()===agora.getMonth()&&d.getFullYear()===agora.getFullYear();});
   const lv=vm.map(v=>`<tr><td>${fDT(v.data)}</td><td>${v.produtoNome}</td><td>${v.quantidade}</td><td>${fBRL(v.precoFinal)}</td><td>${fBRL(v.totalFinal)}</td><td>${fBRL(v.lucro)}</td><td>${v.canal}</td></tr>`).join('');
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>AçaíPrice — Relatório</title><style>body{font-family:Arial,sans-serif;font-size:12px;color:#222}h1{color:#5a3e8a}h2{color:#5a3e8a;font-size:14px;margin:24px 0 8px}table{width:100%;border-collapse:collapse;margin-bottom:24px}th{background:#5a3e8a;color:#fff;padding:8px;text-align:left;font-size:11px}td{padding:7px 8px;border-bottom:1px solid #eee}</style></head><body><h1>🫐 AçaíPrice — Relatório</h1><p>Gerado em ${agora.toLocaleString('pt-BR')}</p><h2>Precificação</h2><table><thead><tr><th>Produto</th><th>Volume</th><th>Custo Insumos</th><th>Despesas</th><th>Custo Total</th><th>Margem</th><th>Preço Sugerido</th><th>Lucro/Un.</th></tr></thead><tbody>${linhas}</tbody></table><h2>Vendas do Mês</h2><table><thead><tr><th>Data</th><th>Produto</th><th>Qtd</th><th>Preço</th><th>Total</th><th>Lucro</th><th>Canal</th></tr></thead><tbody>${lv}</tbody></table><script>window.onload=()=>window.print()<\/script></body></html>`;
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Precify — Relatório</title><style>body{font-family:Arial,sans-serif;font-size:12px;color:#222}h1{color:#5a3e8a}h2{color:#5a3e8a;font-size:14px;margin:24px 0 8px}table{width:100%;border-collapse:collapse;margin-bottom:24px}th{background:#5a3e8a;color:#fff;padding:8px;text-align:left;font-size:11px}td{padding:7px 8px;border-bottom:1px solid #eee}</style></head><body><h1>Precify — Relatório</h1><p>Gerado em ${agora.toLocaleString('pt-BR')}</p><h2>Precificação</h2><table><thead><tr><th>Produto</th><th>Volume</th><th>Custo Insumos</th><th>Despesas</th><th>Custo Total</th><th>Margem</th><th>Preço Sugerido</th><th>Lucro/Un.</th></tr></thead><tbody>${linhas}</tbody></table><h2>Vendas do Mês</h2><table><thead><tr><th>Data</th><th>Produto</th><th>Qtd</th><th>Preço</th><th>Total</th><th>Lucro</th><th>Canal</th></tr></thead><tbody>${lv}</tbody></table><script>window.onload=()=>window.print()<\/script></body></html>`;
   const w=window.open('','_blank'); w.document.write(html); w.document.close();
 }
 
