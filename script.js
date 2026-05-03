@@ -154,6 +154,20 @@ function converterQuantidade(valor, de, para) {
   return qtd * (base[de] / base[para]);
 }
 
+function obterUnidadeEstoqueComponente(item, comp = null) {
+  const c = comp || obterComponenteComposicao(item);
+  if (!item || !c) return 'un';
+  return item.tipo === 'produto' ? obterUnidadeProduto(c) : (c.unidade || 'un');
+}
+
+function converterComponenteParaEstoque(item, quantidade = null, comp = null) {
+  const c = comp || obterComponenteComposicao(item);
+  if (!item || !c) return NaN;
+  const qtd = Number.isFinite(Number(quantidade)) ? Number(quantidade) : item.quantidade;
+  const de = item.unidade || obterUnidadeEstoqueComponente(item, c);
+  return converterQuantidade(qtd, de, obterUnidadeEstoqueComponente(item, c));
+}
+
 function normalizarItemComposicao(item) {
   if (!item) return null;
   const quantidade = parseFloat(item.quantidade) || 0;
@@ -196,7 +210,9 @@ function obterCustoUnitarioComponente(item, visitados = new Set()) {
     if (!Number.isFinite(fator) || fator <= 0) return NaN;
     return (calc.custoTotal / base) / fator;
   }
-  return c.custoUnitario || 0;
+  const fator = converterQuantidade(1, c.unidade || 'un', item.unidade || c.unidade || 'un');
+  if (!Number.isFinite(fator) || fator <= 0) return NaN;
+  return (c.custoUnitario || 0) / fator;
 }
 
 function obterRotuloComponente(item) {
@@ -289,7 +305,9 @@ function calcularProduto(produto, visitados = new Set()) {
       if (!Number.isFinite(fator) || fator <= 0) return NaN;
       return acc + ((calc.custoTotal / base) / fator) * item.quantidade;
     }
-    return acc + ((comp.custoUnitario || 0) * item.quantidade);
+    const custoUnit = obterCustoUnitarioComponente(item, prox);
+    if (!Number.isFinite(custoUnit)) return NaN;
+    return acc + (custoUnit * item.quantidade);
   }, 0);
   if (Number.isNaN(custoInsumos)) return { custoInsumos:0, despesas:0, custoTotal:0, margem:0, precoSugerido:0, lucro:0, ciclo:true };
   const despesas    = parseFloat(produto.despesas || 0);
@@ -1003,17 +1021,16 @@ function verificarEstoqueParaProducao(produto, fatorProducao) {
     if (!item || item.quantidade <= 0) continue;
     const comp = obterComponenteComposicao(item);
     if (!comp) continue;
-    const necessario = item.quantidade * fatorProducao;
-    const disponivel = item.tipo === 'produto'
-      ? (comp.estoqueAtual || 0)
-      : (comp.estoqueAtual || 0);
-    if (disponivel < necessario) {
+    const necessario = converterComponenteParaEstoque(item, item.quantidade * fatorProducao, comp);
+    const disponivel = comp.estoqueAtual || 0;
+    const unidade = obterUnidadeEstoqueComponente(item, comp);
+    if (!Number.isFinite(necessario) || necessario < 0 || disponivel < necessario) {
       avisos.push({
         tipo: item.tipo,
         nome: comp.nome,
         disponivel,
-        necessario,
-        unidade: item.tipo === 'produto' ? obterUnidadeProduto(comp) : (comp.unidade || 'un'),
+        necessario: Number.isFinite(necessario) ? necessario : 0,
+        unidade,
       });
     }
   }
@@ -1029,26 +1046,30 @@ function consumirComponentesParaProducao(produto, fatorProducao, producaoId) {
     if (item.tipo === 'insumo') {
       const idx = App.insumos.findIndex(i => i.id === item.itemId);
       if (idx === -1) continue;
+      const qtdEstoque = converterComponenteParaEstoque(item, qtdUsada, App.insumos[idx]);
+      if (!Number.isFinite(qtdEstoque)) continue;
       const antes = App.insumos[idx].estoqueAtual || 0;
-      App.insumos[idx].estoqueAtual = Math.max(0, antes - qtdUsada);
+      App.insumos[idx].estoqueAtual = Math.max(0, antes - qtdEstoque);
       registrarMovEstoque({
         alvoTipo: 'insumo',
         itemId: item.itemId,
         tipo: 'consumo_producao',
-        quantidade: qtdUsada,
+        quantidade: qtdEstoque,
         saldoApos: App.insumos[idx].estoqueAtual,
         observacao: `Produção de ${produto.nome} ×${fatorProducao} (ref: ${producaoId})`,
       });
     } else {
       const idx = App.produtos.findIndex(p => p.id === item.itemId);
       if (idx === -1) continue;
+      const qtdEstoque = converterComponenteParaEstoque(item, qtdUsada, App.produtos[idx]);
+      if (!Number.isFinite(qtdEstoque)) continue;
       const antes = App.produtos[idx].estoqueAtual || 0;
-      App.produtos[idx].estoqueAtual = Math.max(0, antes - qtdUsada);
+      App.produtos[idx].estoqueAtual = Math.max(0, antes - qtdEstoque);
       registrarMovEstoque({
         alvoTipo: 'produto',
         itemId: item.itemId,
         tipo: 'consumo_producao',
-        quantidade: qtdUsada,
+        quantidade: qtdEstoque,
         saldoApos: App.produtos[idx].estoqueAtual,
         observacao: `Uso de produto em ${produto.nome} ×${fatorProducao} (ref: ${producaoId})`,
       });
@@ -1149,26 +1170,30 @@ function reabastecerComponentesDeProducao(produto, fatorProducao, estornoId) {
     if (item.tipo === 'insumo') {
       const idx = App.insumos.findIndex(i => i.id === item.itemId);
       if (idx === -1) continue;
+      const qtdEstoque = converterComponenteParaEstoque(item, qtdRestaurada, App.insumos[idx]);
+      if (!Number.isFinite(qtdEstoque)) continue;
       const antes = App.insumos[idx].estoqueAtual || 0;
-      App.insumos[idx].estoqueAtual = antes + qtdRestaurada;
+      App.insumos[idx].estoqueAtual = antes + qtdEstoque;
       registrarMovEstoque({
         alvoTipo: 'insumo',
         itemId: item.itemId,
         tipo: 'estorno_producao_entrada',
-        quantidade: qtdRestaurada,
+        quantidade: qtdEstoque,
         saldoApos: App.insumos[idx].estoqueAtual,
         observacao: `Estorno de produção: ${produto.nome} (ref: ${estornoId})`,
       });
     } else {
       const idx = App.produtos.findIndex(p => p.id === item.itemId);
       if (idx === -1) continue;
+      const qtdEstoque = converterComponenteParaEstoque(item, qtdRestaurada, App.produtos[idx]);
+      if (!Number.isFinite(qtdEstoque)) continue;
       const antes = App.produtos[idx].estoqueAtual || 0;
-      App.produtos[idx].estoqueAtual = antes + qtdRestaurada;
+      App.produtos[idx].estoqueAtual = antes + qtdEstoque;
       registrarMovEstoque({
         alvoTipo: 'produto',
         itemId: item.itemId,
         tipo: 'estorno_producao_entrada',
-        quantidade: qtdRestaurada,
+        quantidade: qtdEstoque,
         saldoApos: App.produtos[idx].estoqueAtual,
         observacao: `Retorno de produto em estorno: ${produto.nome} (ref: ${estornoId})`,
       });
@@ -1360,8 +1385,10 @@ function renderComposicaoTemp() {
     }
     const custo = custoUnit * item.quantidade;
     total += custo;
-    const estoqueDisp = item.tipo === 'insumo' ? `${formatNum(comp.estoqueAtual || 0, 2)} ${comp.unidade}` : '—';
-    const estoqueOk = item.tipo === 'insumo' && (comp.estoqueAtual || 0) >= item.quantidade;
+    const unidadeEstoque = obterUnidadeEstoqueComponente(item, comp);
+    const qtdEstoque = converterComponenteParaEstoque(item, item.quantidade, comp);
+    const estoqueDisp = item.tipo === 'insumo' ? `${formatNum(comp.estoqueAtual || 0, 2)} ${unidadeEstoque}` : '—';
+    const estoqueOk = item.tipo === 'insumo' && Number.isFinite(qtdEstoque) && (comp.estoqueAtual || 0) >= qtdEstoque;
     return `
       <tr>
         <td><span class="tag ${item.tipo === 'produto' ? 'tag-produto' : 'tag-fruta'}">${obterRotuloComponente(item)}</span> ${comp.nome}</td>
@@ -1407,7 +1434,13 @@ document.getElementById('btnAdicionarInsumo').addEventListener('click', () => {
   });
   if (jaExiste !== -1) {
     const itemAtual = normalizarItemComposicao(App.composicaoTemp[jaExiste]);
-    App.composicaoTemp[jaExiste] = { ...itemAtual, quantidade: itemAtual.quantidade + qtd, unidade: unidade || itemAtual.unidade };
+    const unidadeBase = itemAtual.unidade || unidade;
+    const qtdConvertida = converterQuantidade(qtd, unidade || unidadeBase, unidadeBase);
+    if (!Number.isFinite(qtdConvertida)) {
+      showToast('Unidade incompatÃ­vel com o componente jÃ¡ adicionado.', 'error');
+      return;
+    }
+    App.composicaoTemp[jaExiste] = { ...itemAtual, quantidade: itemAtual.quantidade + qtdConvertida, unidade: unidadeBase };
   } else {
     App.composicaoTemp.push({ tipo, itemId: insId, quantidade: qtd, unidade });
   }
@@ -1896,10 +1929,11 @@ function exportarRelatorio() {
   <table><thead><tr><th>Produto</th><th>Volume</th><th>Custo Insumos</th><th>Despesas</th><th>Custo Total</th><th>Margem</th><th>Preço Sugerido</th><th>Lucro/Un.</th></tr></thead><tbody>${linhas}</tbody></table>
   <h2>Vendas do Mês</h2>
   <table><thead><tr><th>Data</th><th>Produto</th><th>Qtd</th><th>Preço Unit.</th><th>Total</th><th>Lucro</th><th>Canal</th></tr></thead><tbody>${linhasVendas}</tbody></table>
-  <script>window.onload=()=>{window.print()}<\/script></body></html>`;
+  </body></html>`;
   const w = window.open('', '_blank');
   w.document.write(html);
   w.document.close();
+  w.onload = () => w.print();
 }
 
 // ============================================================
@@ -1922,10 +1956,10 @@ function carregarDadosMock() {
   const [p1,p2,p3] = [gerarId(),gerarId(),gerarId()];
   const produtos = [
     { id:p1, nome:'Açaí Tradicional',  volume:'300ml', margem:75, despesas:0.20, precoVenda:12.90, descricao:'Açaí puro com granola',
-      estoqueAtual:12, estoqueMinimo:3,
+      estoqueAtual:3600, estoqueMinimo:900,
       composicao:[{tipo:'insumo',itemId:i1,quantidade:0.25,unidade:'kg'},{tipo:'insumo',itemId:i4,quantidade:30,unidade:'g'},{tipo:'insumo',itemId:i6,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i7,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i8,quantidade:1,unidade:'un'}] },
     { id:p2, nome:'Açaí Cremoso',      volume:'500ml', margem:80, despesas:0.30, precoVenda:18.90, descricao:'Com leite condensado e granola',
-      estoqueAtual:8, estoqueMinimo:2,
+      estoqueAtual:4000, estoqueMinimo:1000,
       composicao:[{tipo:'insumo',itemId:i1,quantidade:0.38,unidade:'kg'},{tipo:'insumo',itemId:i2,quantidade:60,unidade:'g'},{tipo:'insumo',itemId:i3,quantidade:20,unidade:'g'},{tipo:'insumo',itemId:i4,quantidade:40,unidade:'g'},{tipo:'insumo',itemId:i6,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i7,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i8,quantidade:1,unidade:'un'}] },
     { id:p3, nome:'Açaí com Morango',  volume:'1l',    margem:70, despesas:0.50, precoVenda:28.00, descricao:'Açaí, morango e granola premium',
       estoqueAtual:4, estoqueMinimo:1,

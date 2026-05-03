@@ -1519,6 +1519,8 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px;
                     <option value="un">un</option>
                     <option value="kg">kg</option>
                     <option value="l">l</option>
+                    <option value="cx">cx</option>
+                    <option value="pct">pct</option>
                   </select>
                   <span class="comp-hint" id="unidadeHintComposicao">—</span>
                   <button type="button" class="btn btn-primary" id="btnAdicionarInsumo" style="white-space:nowrap">+ Adicionar</button>
@@ -2150,6 +2152,18 @@ function convQtd(v,de,para) {
   if(!b[de]||!b[para]) return NaN;
   return q*(b[de]/b[para]);
 }
+function unidadeEstoqueComp(item, comp=null) {
+  const c=comp||getComp(item);
+  if(!item||!c) return 'un';
+  return item.tipo==='produto' ? unidadeProd(c) : (c.unidade||'un');
+}
+function qtdCompEmEstoque(item, qtd=null, comp=null) {
+  const c=comp||getComp(item);
+  if(!item||!c) return NaN;
+  const quantidade=Number.isFinite(Number(qtd))?Number(qtd):item.quantidade;
+  const de=item.unidade||unidadeEstoqueComp(item,c);
+  return convQtd(quantidade,de,unidadeEstoqueComp(item,c));
+}
 function normItem(io) {
   if(!io) return null;
   const qtd = parseFloat(io.quantidade)||0;
@@ -2178,7 +2192,9 @@ function getCustoUnitComp(item, vis=new Set()) {
     if(!Number.isFinite(fator)||fator<=0) return NaN;
     return (calc.custoTotal/base)/fator;
   }
-  return c.custoUnitario||0;
+  const fator=convQtd(1,c.unidade||'un',item.unidade||c.unidade||'un');
+  if(!Number.isFinite(fator)||fator<=0) return NaN;
+  return (c.custoUnitario||0)/fator;
 }
 function labelComp(item) { return item.tipo==='produto'?'Produto':'Insumo'; }
 function tipoAlvoMov(m) { return m.alvoTipo||(m.produtoId?'produto':'insumo'); }
@@ -2322,7 +2338,9 @@ function calcProd(produto, vis=new Set()) {
       if(!Number.isFinite(fator)||fator<=0) return NaN;
       return acc+((calc.custoTotal/base)/fator)*it.quantidade;
     }
-    return acc+((c.custoUnitario||0)*it.quantidade);
+    const cu=getCustoUnitComp(it,prox);
+    if(!Number.isFinite(cu)) return NaN;
+    return acc+(cu*it.quantidade);
   },0);
   if(Number.isNaN(ci)) return {custoInsumos:0,despesas:0,custoTotal:0,margem:0,precoSugerido:0,lucro:0,ciclo:true};
   const desp=parseFloat(produto.despesas||0);
@@ -2773,13 +2791,33 @@ function calcFatorProd(p,qBase) {
   return qBase/r.quantidade;
 }
 function verificarEstoqueProducao(p,fator) {
-  const avisos=[]; for(const io of (p.composicao||[])){const it=normItem(io);if(!it||it.quantidade<=0) continue;const comp=getComp(it);if(!comp) continue;const nec=it.quantidade*fator,disp=comp.estoqueAtual||0;if(disp<nec) avisos.push({nome:comp.nome,disp,nec,un:it.tipo==='produto'?unidadeProd(comp):(comp.unidade||'un')});}
+  const avisos=[];
+  for(const io of (p.composicao||[])){
+    const it=normItem(io); if(!it||it.quantidade<=0) continue;
+    const comp=getComp(it); if(!comp) continue;
+    const nec=qtdCompEmEstoque(it,it.quantidade*fator,comp);
+    const disp=comp.estoqueAtual||0, un=unidadeEstoqueComp(it,comp);
+    if(!Number.isFinite(nec)||nec<0||disp<nec) avisos.push({nome:comp.nome,disp,nec:Number.isFinite(nec)?nec:0,un});
+  }
   return avisos;
 }
 function consumirParaProducao(p,fator,pid) {
-  for(const io of (p.composicao||[])){const it=normItem(io);if(!it||it.quantidade<=0) continue;const qtdUso=it.quantidade*fator;
-    if(it.tipo==='insumo'){const idx=App.insumos.findIndex(i=>i.id===it.itemId);if(idx===-1) continue;const a=App.insumos[idx].estoqueAtual||0;App.insumos[idx].estoqueAtual=Math.max(0,a-qtdUso);registrarMov({alvoTipo:'insumo',itemId:it.itemId,tipo:'consumo_producao',quantidade:qtdUso,saldoApos:App.insumos[idx].estoqueAtual,observacao:`Produção de ${p.nome} (ref:${pid})`});}
-    else{const idx=App.produtos.findIndex(x=>x.id===it.itemId);if(idx===-1) continue;const a=App.produtos[idx].estoqueAtual||0;App.produtos[idx].estoqueAtual=Math.max(0,a-qtdUso);registrarMov({alvoTipo:'produto',itemId:it.itemId,tipo:'consumo_producao',quantidade:qtdUso,saldoApos:App.produtos[idx].estoqueAtual,observacao:`Uso em ${p.nome} (ref:${pid})`});}
+  for(const io of (p.composicao||[])){
+    const it=normItem(io); if(!it||it.quantidade<=0) continue;
+    const qtdUso=it.quantidade*fator;
+    if(it.tipo==='insumo'){
+      const idx=App.insumos.findIndex(i=>i.id===it.itemId); if(idx===-1) continue;
+      const uso=qtdCompEmEstoque(it,qtdUso,App.insumos[idx]); if(!Number.isFinite(uso)) continue;
+      const a=App.insumos[idx].estoqueAtual||0;
+      App.insumos[idx].estoqueAtual=Math.max(0,a-uso);
+      registrarMov({alvoTipo:'insumo',itemId:it.itemId,tipo:'consumo_producao',quantidade:uso,saldoApos:App.insumos[idx].estoqueAtual,observacao:`Produção de ${p.nome} (ref:${pid})`});
+    } else {
+      const idx=App.produtos.findIndex(x=>x.id===it.itemId); if(idx===-1) continue;
+      const uso=qtdCompEmEstoque(it,qtdUso,App.produtos[idx]); if(!Number.isFinite(uso)) continue;
+      const a=App.produtos[idx].estoqueAtual||0;
+      App.produtos[idx].estoqueAtual=Math.max(0,a-uso);
+      registrarMov({alvoTipo:'produto',itemId:it.itemId,tipo:'consumo_producao',quantidade:uso,saldoApos:App.produtos[idx].estoqueAtual,observacao:`Uso em ${p.nome} (ref:${pid})`});
+    }
   }
 }
 async function registrarProducao() {
@@ -2821,9 +2859,20 @@ function abrirEstorno(id) {
   document.getElementById('modalEstornoProducao').classList.remove('hidden');
 }
 function reabastecerEstorno(p,fator,eid) {
-  for(const io of (p.composicao||[])){const it=normItem(io);if(!it||it.quantidade<=0) continue;const qr=it.quantidade*fator;
-    if(it.tipo==='insumo'){const idx=App.insumos.findIndex(i=>i.id===it.itemId);if(idx===-1) continue;App.insumos[idx].estoqueAtual=(App.insumos[idx].estoqueAtual||0)+qr;registrarMov({alvoTipo:'insumo',itemId:it.itemId,tipo:'estorno_producao_entrada',quantidade:qr,saldoApos:App.insumos[idx].estoqueAtual,observacao:`Estorno de ${p.nome} (ref:${eid})`});}
-    else{const idx=App.produtos.findIndex(x=>x.id===it.itemId);if(idx===-1) continue;App.produtos[idx].estoqueAtual=(App.produtos[idx].estoqueAtual||0)+qr;registrarMov({alvoTipo:'produto',itemId:it.itemId,tipo:'estorno_producao_entrada',quantidade:qr,saldoApos:App.produtos[idx].estoqueAtual,observacao:`Retorno em ${p.nome} (ref:${eid})`});}
+  for(const io of (p.composicao||[])){
+    const it=normItem(io); if(!it||it.quantidade<=0) continue;
+    const qr=it.quantidade*fator;
+    if(it.tipo==='insumo'){
+      const idx=App.insumos.findIndex(i=>i.id===it.itemId); if(idx===-1) continue;
+      const ret=qtdCompEmEstoque(it,qr,App.insumos[idx]); if(!Number.isFinite(ret)) continue;
+      App.insumos[idx].estoqueAtual=(App.insumos[idx].estoqueAtual||0)+ret;
+      registrarMov({alvoTipo:'insumo',itemId:it.itemId,tipo:'estorno_producao_entrada',quantidade:ret,saldoApos:App.insumos[idx].estoqueAtual,observacao:`Estorno de ${p.nome} (ref:${eid})`});
+    } else {
+      const idx=App.produtos.findIndex(x=>x.id===it.itemId); if(idx===-1) continue;
+      const ret=qtdCompEmEstoque(it,qr,App.produtos[idx]); if(!Number.isFinite(ret)) continue;
+      App.produtos[idx].estoqueAtual=(App.produtos[idx].estoqueAtual||0)+ret;
+      registrarMov({alvoTipo:'produto',itemId:it.itemId,tipo:'estorno_producao_entrada',quantidade:ret,saldoApos:App.produtos[idx].estoqueAtual,observacao:`Retorno em ${p.nome} (ref:${eid})`});
+    }
   }
 }
 document.getElementById('btnConfirmarEstorno').addEventListener('click',()=>{
@@ -2981,8 +3030,10 @@ function renderComposicao() {
     const cu=getCustoUnitComp(it);
     if(Number.isNaN(cu)) return `<tr><td colspan="5" style="color:var(--coral)">Ciclo em "${comp.nome}"</td><td><button class="btn-del" onclick="removerComp(${idx})">✕</button></td></tr>`;
     const custo=cu*it.quantidade; total+=custo;
-    const estDisp=it.tipo==='insumo'?`${fNum(comp.estoqueAtual||0,2)} ${comp.unidade}`:'—';
-    const estOk=it.tipo==='insumo'&&(comp.estoqueAtual||0)>=it.quantidade;
+    const unEst=unidadeEstoqueComp(it,comp);
+    const qtdEst=qtdCompEmEstoque(it,it.quantidade,comp);
+    const estDisp=it.tipo==='insumo'?`${fNum(comp.estoqueAtual||0,2)} ${unEst}`:'—';
+    const estOk=it.tipo==='insumo'&&Number.isFinite(qtdEst)&&(comp.estoqueAtual||0)>=qtdEst;
     return`<tr>
       <td><span class="tag ${it.tipo==='produto'?'tag-produto':'tag-fruta'}" style="margin-right:4px">${labelComp(it)}</span>${comp.nome}</td>
       <td>${fNum(it.quantidade,3)}</td><td>${getUnidComp(it)}</td>
@@ -3006,7 +3057,7 @@ document.getElementById('btnAdicionarInsumo').addEventListener('click',()=>{
   const ped=document.getElementById('produtoId').value;
   if(tipo==='produto'&&id===ped){showToast('Um produto não pode compor a si mesmo.','error');return;}
   const ji=App.composicaoTemp.findIndex(i=>{const it=normItem(i);return it&&it.tipo===tipo&&it.itemId===id;});
-  if(ji!==-1){const ia=normItem(App.composicaoTemp[ji]);App.composicaoTemp[ji]={...ia,quantidade:ia.quantidade+qtd,unidade:unid||ia.unidade};}
+  if(ji!==-1){const ia=normItem(App.composicaoTemp[ji]);const unBase=ia.unidade||unid;const qtdConv=convQtd(qtd,unid||unBase,unBase);if(!Number.isFinite(qtdConv)){showToast('Unidade incompatível com o componente já adicionado.','error');return;}App.composicaoTemp[ji]={...ia,quantidade:ia.quantidade+qtdConv,unidade:unBase};}
   else App.composicaoTemp.push({tipo,itemId:id,quantidade:qtd,unidade:unid});
   sel.value=''; document.getElementById('qtdInsumoComposicao').value=''; document.getElementById('unidadeHintComposicao').textContent='—';
   renderComposicao();
@@ -3224,8 +3275,9 @@ function exportarRelatorio() {
   const linhas=App.produtos.map(p=>{const c=calcProd(p);return`<tr><td>${p.nome}</td><td>${p.volume||'—'}</td><td>${fBRL(c.custoInsumos)}</td><td>${fBRL(c.despesas)}</td><td>${fBRL(c.custoTotal)}</td><td>${p.margem}%</td><td>${fBRL(c.precoSugerido)}</td><td>${fBRL(c.lucro)}</td></tr>`;}).join('');
   const vm=App.vendas.filter(v=>{const d=new Date(v.data);return d.getMonth()===agora.getMonth()&&d.getFullYear()===agora.getFullYear();});
   const lv=vm.map(v=>`<tr><td>${fDT(v.data)}</td><td>${v.produtoNome}</td><td>${v.quantidade}</td><td>${fBRL(v.precoFinal)}</td><td>${fBRL(v.totalFinal)}</td><td>${fBRL(v.lucro)}</td><td>${v.canal}</td></tr>`).join('');
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Precify — Relatório</title><style>body{font-family:Arial,sans-serif;font-size:12px;color:#222}h1{color:#5a3e8a}h2{color:#5a3e8a;font-size:14px;margin:24px 0 8px}table{width:100%;border-collapse:collapse;margin-bottom:24px}th{background:#5a3e8a;color:#fff;padding:8px;text-align:left;font-size:11px}td{padding:7px 8px;border-bottom:1px solid #eee}</style></head><body><h1>Precify — Relatório</h1><p>Gerado em ${agora.toLocaleString('pt-BR')}</p><h2>Precificação</h2><table><thead><tr><th>Produto</th><th>Volume</th><th>Custo Insumos</th><th>Despesas</th><th>Custo Total</th><th>Margem</th><th>Preço Sugerido</th><th>Lucro/Un.</th></tr></thead><tbody>${linhas}</tbody></table><h2>Vendas do Mês</h2><table><thead><tr><th>Data</th><th>Produto</th><th>Qtd</th><th>Preço</th><th>Total</th><th>Lucro</th><th>Canal</th></tr></thead><tbody>${lv}</tbody></table><script>window.onload=()=>window.print()<\/script></body></html>`;
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Precify — Relatório</title><style>body{font-family:Arial,sans-serif;font-size:12px;color:#222}h1{color:#5a3e8a}h2{color:#5a3e8a;font-size:14px;margin:24px 0 8px}table{width:100%;border-collapse:collapse;margin-bottom:24px}th{background:#5a3e8a;color:#fff;padding:8px;text-align:left;font-size:11px}td{padding:7px 8px;border-bottom:1px solid #eee}</style></head><body><h1>Precify — Relatório</h1><p>Gerado em ${agora.toLocaleString('pt-BR')}</p><h2>Precificação</h2><table><thead><tr><th>Produto</th><th>Volume</th><th>Custo Insumos</th><th>Despesas</th><th>Custo Total</th><th>Margem</th><th>Preço Sugerido</th><th>Lucro/Un.</th></tr></thead><tbody>${linhas}</tbody></table><h2>Vendas do Mês</h2><table><thead><tr><th>Data</th><th>Produto</th><th>Qtd</th><th>Preço</th><th>Total</th><th>Lucro</th><th>Canal</th></tr></thead><tbody>${lv}</tbody></table></body></html>`;
   const w=window.open('','_blank'); w.document.write(html); w.document.close();
+  w.onload=()=>w.print();
 }
 
 // ============ MOCK DATA ============
@@ -3244,8 +3296,8 @@ function carregarMock() {
   ];
   const [p1,p2,p3]=[gerarId(),gerarId(),gerarId()];
   const prods=[
-    {id:p1,nome:'Açaí Tradicional',volume:'300ml',margem:75,despesas:0.2,precoVenda:12.9,descricao:'Açaí puro com granola',estoqueAtual:12,estoqueMinimo:3,composicao:[{tipo:'insumo',itemId:i1,quantidade:0.25,unidade:'kg'},{tipo:'insumo',itemId:i4,quantidade:30,unidade:'g'},{tipo:'insumo',itemId:i6,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i7,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i8,quantidade:1,unidade:'un'}]},
-    {id:p2,nome:'Açaí Cremoso',volume:'500ml',margem:80,despesas:0.3,precoVenda:18.9,descricao:'Com leite condensado e granola',estoqueAtual:8,estoqueMinimo:2,composicao:[{tipo:'insumo',itemId:i1,quantidade:0.38,unidade:'kg'},{tipo:'insumo',itemId:i2,quantidade:60,unidade:'g'},{tipo:'insumo',itemId:i3,quantidade:20,unidade:'g'},{tipo:'insumo',itemId:i4,quantidade:40,unidade:'g'},{tipo:'insumo',itemId:i6,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i7,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i8,quantidade:1,unidade:'un'}]},
+    {id:p1,nome:'Açaí Tradicional',volume:'300ml',margem:75,despesas:0.2,precoVenda:12.9,descricao:'Açaí puro com granola',estoqueAtual:3600,estoqueMinimo:900,composicao:[{tipo:'insumo',itemId:i1,quantidade:0.25,unidade:'kg'},{tipo:'insumo',itemId:i4,quantidade:30,unidade:'g'},{tipo:'insumo',itemId:i6,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i7,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i8,quantidade:1,unidade:'un'}]},
+    {id:p2,nome:'Açaí Cremoso',volume:'500ml',margem:80,despesas:0.3,precoVenda:18.9,descricao:'Com leite condensado e granola',estoqueAtual:4000,estoqueMinimo:1000,composicao:[{tipo:'insumo',itemId:i1,quantidade:0.38,unidade:'kg'},{tipo:'insumo',itemId:i2,quantidade:60,unidade:'g'},{tipo:'insumo',itemId:i3,quantidade:20,unidade:'g'},{tipo:'insumo',itemId:i4,quantidade:40,unidade:'g'},{tipo:'insumo',itemId:i6,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i7,quantidade:1,unidade:'un'},{tipo:'insumo',itemId:i8,quantidade:1,unidade:'un'}]},
     {id:p3,nome:'Açaí com Morango',volume:'1l',margem:70,despesas:0.5,precoVenda:28,descricao:'Açaí, morango e granola premium',estoqueAtual:4,estoqueMinimo:1,composicao:[{tipo:'insumo',itemId:i1,quantidade:0.7,unidade:'kg'},{tipo:'insumo',itemId:i5,quantidade:150,unidade:'g'},{tipo:'insumo',itemId:i4,quantidade:60,unidade:'g'},{tipo:'insumo',itemId:i2,quantidade:80,unidade:'g'},{tipo:'insumo',itemId:i6,quantidade:2,unidade:'un'},{tipo:'insumo',itemId:i7,quantidade:2,unidade:'un'},{tipo:'insumo',itemId:i8,quantidade:1,unidade:'un'}]},
   ];
   Storage.saveInsumos(ins); Storage.saveProdutos(prods);
